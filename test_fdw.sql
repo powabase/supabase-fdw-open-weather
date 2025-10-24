@@ -16,7 +16,7 @@ CREATE SERVER IF NOT EXISTS openweather_server
     fdw_package_url 'http://host.docker.internal:8000/open_weather_fdw.wasm',
     fdw_package_name 'powabase:supabase-fdw-open-weather',
     fdw_package_version '0.2.0',
-    fdw_package_checksum '8411826e9bedd01f51b5a2c51e6b0ea2f0b20870c90ba9324e76583a2c709bd9',
+    fdw_package_checksum 'dbb34d6f19b47e16c4373f793aeb8a7e33499a61f02d8a7656eb849fb3d340d7',
     api_url 'https://api.openweathermap.org/data/3.0',
     api_key 'your_openweather_api_key_here'  -- Get free key: https://openweathermap.org/api/one-call-3
   );

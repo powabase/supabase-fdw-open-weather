@@ -117,6 +117,7 @@ impl EndpointType {
 /// Endpoint-specific data storage
 /// These schemas represent the flattened PostgreSQL output
 #[derive(Debug, Default)]
+#[allow(clippy::large_enum_variant)]
 enum EndpointData {
     #[default]
     None,
@@ -1824,9 +1825,9 @@ struct OpenWeatherFdwImpl;
 impl Guest for OpenWeatherFdwImpl {
     fn host_version_requirement() -> String {
         // Supabase Wrappers version requirement
-        // Production Supabase instances run 0.2.x
+        // Compatible with both local (0.1.5) and production (0.2.x+)
         // This must match WIT declarations in wit/world.wit
-        "^0.2.0".to_string()
+        "^0.1.0".to_string()
     }
 
     fn init(ctx: &Context) -> FdwResult {
