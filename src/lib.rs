@@ -60,14 +60,14 @@ use bindings::{
 /// v0.2.0: 8 foreign tables mapping to 4 API endpoints
 #[derive(Debug, Clone, Copy, PartialEq)]
 enum EndpointType {
-    CurrentWeather,      // /onecall → current
-    MinutelyForecast,    // /onecall → minutely[]
-    HourlyForecast,      // /onecall → hourly[]
-    DailyForecast,       // /onecall → daily[]
-    WeatherAlerts,       // /onecall → alerts[]
-    HistoricalWeather,   // /onecall/timemachine → data[0]
-    DailySummary,        // /onecall/day_summary → daily aggregations
-    WeatherOverview,     // /onecall/overview → AI weather summary
+    CurrentWeather,    // /onecall → current
+    MinutelyForecast,  // /onecall → minutely[]
+    HourlyForecast,    // /onecall → hourly[]
+    DailyForecast,     // /onecall → daily[]
+    WeatherAlerts,     // /onecall → alerts[]
+    HistoricalWeather, // /onecall/timemachine → data[0]
+    DailySummary,      // /onecall/day_summary → daily aggregations
+    WeatherOverview,   // /onecall/overview → AI weather summary
 }
 
 impl EndpointType {
@@ -101,6 +101,7 @@ impl EndpointType {
     }
 
     /// Check if endpoint calls /onecall (shared response parsing)
+    #[allow(dead_code)]
     fn calls_onecall(&self) -> bool {
         matches!(
             self,
@@ -166,9 +167,9 @@ enum EndpointData {
         wind_speed: Vec<f64>,
         wind_deg: Vec<i64>,
         wind_gust: Vec<Option<f64>>,
-        pop: Vec<f64>,              // Probability of precipitation
-        rain_1h: Vec<Option<f64>>,  // Rain volume (optional)
-        snow_1h: Vec<Option<f64>>,  // Snow volume (optional)
+        pop: Vec<f64>,             // Probability of precipitation
+        rain_1h: Vec<Option<f64>>, // Rain volume (optional)
+        snow_1h: Vec<Option<f64>>, // Snow volume (optional)
         weather_main: Vec<String>,
         weather_description: Vec<String>,
         weather_icon: Vec<String>,
@@ -296,6 +297,7 @@ impl EndpointData {
     }
 
     /// Clear all data
+    #[allow(dead_code)]
     fn clear(&mut self) {
         *self = EndpointData::None;
     }
@@ -317,11 +319,11 @@ struct OpenWeatherFdw {
     /// Query parameters from WHERE clause
     lat: f64,
     lon: f64,
-    units: String,             // "metric", "imperial", or "standard"
-    lang: String,              // "en", "de", "es", etc.
-    dt: Option<i64>,           // Unix timestamp (historical_weather)
-    date: Option<String>,      // YYYY-MM-DD date (daily_summary, weather_overview)
-    tz: Option<String>,        // Timezone offset +/-HHMM (daily_summary)
+    units: String,        // "metric", "imperial", or "standard"
+    lang: String,         // "en", "de", "es", etc.
+    dt: Option<i64>,      // Unix timestamp (historical_weather)
+    date: Option<String>, // YYYY-MM-DD date (daily_summary, weather_overview)
+    tz: Option<String>,   // Timezone offset +/-HHMM (daily_summary)
     /// Current row index for iteration
     current_row: usize,
 }
@@ -390,14 +392,14 @@ impl OpenWeatherFdw {
         )?;
 
         // Validate ranges
-        if lat < -90.0 || lat > 90.0 {
+        if !(-90.0..=90.0).contains(&lat) {
             return Err(format!(
                 "lat must be between -90 and 90, got {}. Example: WHERE lat = 52.52",
                 lat
             ));
         }
 
-        if lon < -180.0 || lon > 180.0 {
+        if !(-180.0..=180.0).contains(&lon) {
             return Err(format!(
                 "lon must be between -180 and 180, got {}. Example: WHERE lon = 13.405",
                 lon
@@ -424,21 +426,41 @@ impl OpenWeatherFdw {
             | EndpointType::WeatherAlerts => {
                 format!(
                     "{}{}?lat={}&lon={}&appid={}&units={}&lang={}",
-                    self.base_url, api_path, self.lat, self.lon, self.api_key, self.units, self.lang
+                    self.base_url,
+                    api_path,
+                    self.lat,
+                    self.lon,
+                    self.api_key,
+                    self.units,
+                    self.lang
                 )
             }
             EndpointType::HistoricalWeather => {
                 let dt = self.dt.ok_or("dt parameter required for historical_weather. Example: WHERE lat = 52.52 AND lon = 13.405 AND dt = 1609459200")?;
                 format!(
                     "{}{}?lat={}&lon={}&dt={}&appid={}&units={}&lang={}",
-                    self.base_url, api_path, self.lat, self.lon, dt, self.api_key, self.units, self.lang
+                    self.base_url,
+                    api_path,
+                    self.lat,
+                    self.lon,
+                    dt,
+                    self.api_key,
+                    self.units,
+                    self.lang
                 )
             }
             EndpointType::DailySummary => {
                 let date = self.date.as_ref().ok_or("date parameter required for daily_summary (YYYY-MM-DD format). Example: WHERE lat = 52.52 AND lon = 13.405 AND date = '2024-01-15'")?;
                 let mut url = format!(
                     "{}{}?lat={}&lon={}&date={}&appid={}&units={}&lang={}",
-                    self.base_url, api_path, self.lat, self.lon, date, self.api_key, self.units, self.lang
+                    self.base_url,
+                    api_path,
+                    self.lat,
+                    self.lon,
+                    date,
+                    self.api_key,
+                    self.units,
+                    self.lang
                 );
                 // Add optional tz parameter
                 if let Some(ref tz) = self.tz {
@@ -449,7 +471,13 @@ impl OpenWeatherFdw {
             EndpointType::WeatherOverview => {
                 let mut url = format!(
                     "{}{}?lat={}&lon={}&appid={}&units={}&lang={}",
-                    self.base_url, api_path, self.lat, self.lon, self.api_key, self.units, self.lang
+                    self.base_url,
+                    api_path,
+                    self.lat,
+                    self.lon,
+                    self.api_key,
+                    self.units,
+                    self.lang
                 );
                 // Add optional date parameter (defaults to today if omitted)
                 if let Some(ref date) = self.date {
@@ -529,9 +557,7 @@ impl OpenWeatherFdw {
             .and_then(|v| v.as_i64())
             .ok_or("missing 'wind_deg' in current")?;
 
-        let wind_gust = current
-            .get("wind_gust")
-            .and_then(|v| v.as_f64());
+        let wind_gust = current.get("wind_gust").and_then(|v| v.as_f64());
 
         // CRITICAL: Extract weather from array[0]
         let weather_arr = current
@@ -539,9 +565,7 @@ impl OpenWeatherFdw {
             .and_then(|v| v.as_array())
             .ok_or("missing 'weather' array in current")?;
 
-        let weather = weather_arr
-            .get(0)
-            .ok_or("weather array is empty")?;
+        let weather = weather_arr.first().ok_or("weather array is empty")?;
 
         let weather_main = weather
             .get("main")
@@ -619,7 +643,10 @@ impl OpenWeatherFdw {
             precipitation,
         };
 
-        utils::report_info(&format!("Parsed {} minutely forecast data points", self.data.row_count()));
+        utils::report_info(&format!(
+            "Parsed {} minutely forecast data points",
+            self.data.row_count()
+        ));
 
         Ok(())
     }
@@ -652,19 +679,67 @@ impl OpenWeatherFdw {
         let mut weather_icon = Vec::with_capacity(capacity);
 
         for item in hourly_arr {
-            timestamps.push(item.get("dt").and_then(|v| v.as_i64()).ok_or("missing dt")?);
-            temps.push(item.get("temp").and_then(|v| v.as_f64()).ok_or("missing temp")?);
-            feels_like.push(item.get("feels_like").and_then(|v| v.as_f64()).ok_or("missing feels_like")?);
-            pressure.push(item.get("pressure").and_then(|v| v.as_i64()).ok_or("missing pressure")?);
-            humidity.push(item.get("humidity").and_then(|v| v.as_i64()).ok_or("missing humidity")?);
-            dew_point.push(item.get("dew_point").and_then(|v| v.as_f64()).ok_or("missing dew_point")?);
-            uvi.push(item.get("uvi").and_then(|v| v.as_f64()).ok_or("missing uvi")?);
-            clouds.push(item.get("clouds").and_then(|v| v.as_i64()).ok_or("missing clouds")?);
-            visibility.push(item.get("visibility").and_then(|v| v.as_i64()).ok_or("missing visibility")?);
-            wind_speed.push(item.get("wind_speed").and_then(|v| v.as_f64()).ok_or("missing wind_speed")?);
-            wind_deg.push(item.get("wind_deg").and_then(|v| v.as_i64()).ok_or("missing wind_deg")?);
+            timestamps.push(
+                item.get("dt")
+                    .and_then(|v| v.as_i64())
+                    .ok_or("missing dt")?,
+            );
+            temps.push(
+                item.get("temp")
+                    .and_then(|v| v.as_f64())
+                    .ok_or("missing temp")?,
+            );
+            feels_like.push(
+                item.get("feels_like")
+                    .and_then(|v| v.as_f64())
+                    .ok_or("missing feels_like")?,
+            );
+            pressure.push(
+                item.get("pressure")
+                    .and_then(|v| v.as_i64())
+                    .ok_or("missing pressure")?,
+            );
+            humidity.push(
+                item.get("humidity")
+                    .and_then(|v| v.as_i64())
+                    .ok_or("missing humidity")?,
+            );
+            dew_point.push(
+                item.get("dew_point")
+                    .and_then(|v| v.as_f64())
+                    .ok_or("missing dew_point")?,
+            );
+            uvi.push(
+                item.get("uvi")
+                    .and_then(|v| v.as_f64())
+                    .ok_or("missing uvi")?,
+            );
+            clouds.push(
+                item.get("clouds")
+                    .and_then(|v| v.as_i64())
+                    .ok_or("missing clouds")?,
+            );
+            visibility.push(
+                item.get("visibility")
+                    .and_then(|v| v.as_i64())
+                    .ok_or("missing visibility")?,
+            );
+            wind_speed.push(
+                item.get("wind_speed")
+                    .and_then(|v| v.as_f64())
+                    .ok_or("missing wind_speed")?,
+            );
+            wind_deg.push(
+                item.get("wind_deg")
+                    .and_then(|v| v.as_i64())
+                    .ok_or("missing wind_deg")?,
+            );
             wind_gust.push(item.get("wind_gust").and_then(|v| v.as_f64()));
-            pop.push(item.get("pop").and_then(|v| v.as_f64()).ok_or("missing pop")?);
+            pop.push(
+                item.get("pop")
+                    .and_then(|v| v.as_f64())
+                    .ok_or("missing pop")?,
+            );
 
             // CRITICAL: Rain/snow are conditional NESTED objects
             let rain = item
@@ -682,11 +757,32 @@ impl OpenWeatherFdw {
             snow_1h.push(snow);
 
             // Extract weather from weather[0]
-            let weather_arr = item.get("weather").and_then(|v| v.as_array()).ok_or("missing weather array")?;
-            let weather = weather_arr.get(0).ok_or("weather array is empty")?;
-            weather_main.push(weather.get("main").and_then(|v| v.as_str()).unwrap_or("Unknown").to_string());
-            weather_description.push(weather.get("description").and_then(|v| v.as_str()).unwrap_or("unknown").to_string());
-            weather_icon.push(weather.get("icon").and_then(|v| v.as_str()).unwrap_or("01d").to_string());
+            let weather_arr = item
+                .get("weather")
+                .and_then(|v| v.as_array())
+                .ok_or("missing weather array")?;
+            let weather = weather_arr.first().ok_or("weather array is empty")?;
+            weather_main.push(
+                weather
+                    .get("main")
+                    .and_then(|v| v.as_str())
+                    .unwrap_or("Unknown")
+                    .to_string(),
+            );
+            weather_description.push(
+                weather
+                    .get("description")
+                    .and_then(|v| v.as_str())
+                    .unwrap_or("unknown")
+                    .to_string(),
+            );
+            weather_icon.push(
+                weather
+                    .get("icon")
+                    .and_then(|v| v.as_str())
+                    .unwrap_or("01d")
+                    .to_string(),
+            );
         }
 
         self.data = EndpointData::HourlyForecast {
@@ -712,7 +808,10 @@ impl OpenWeatherFdw {
             weather_icon,
         };
 
-        utils::report_info(&format!("Parsed {} hourly forecast data points", self.data.row_count()));
+        utils::report_info(&format!(
+            "Parsed {} hourly forecast data points",
+            self.data.row_count()
+        ));
 
         Ok(())
     }
@@ -757,12 +856,36 @@ impl OpenWeatherFdw {
         let mut weather_icon = Vec::with_capacity(capacity);
 
         for item in daily_arr {
-            timestamps.push(item.get("dt").and_then(|v| v.as_i64()).ok_or("missing dt")?);
-            sunrise.push(item.get("sunrise").and_then(|v| v.as_i64()).ok_or("missing sunrise")?);
-            sunset.push(item.get("sunset").and_then(|v| v.as_i64()).ok_or("missing sunset")?);
-            moonrise.push(item.get("moonrise").and_then(|v| v.as_i64()).ok_or("missing moonrise")?);
-            moonset.push(item.get("moonset").and_then(|v| v.as_i64()).ok_or("missing moonset")?);
-            moon_phase.push(item.get("moon_phase").and_then(|v| v.as_f64()).ok_or("missing moon_phase")?);
+            timestamps.push(
+                item.get("dt")
+                    .and_then(|v| v.as_i64())
+                    .ok_or("missing dt")?,
+            );
+            sunrise.push(
+                item.get("sunrise")
+                    .and_then(|v| v.as_i64())
+                    .ok_or("missing sunrise")?,
+            );
+            sunset.push(
+                item.get("sunset")
+                    .and_then(|v| v.as_i64())
+                    .ok_or("missing sunset")?,
+            );
+            moonrise.push(
+                item.get("moonrise")
+                    .and_then(|v| v.as_i64())
+                    .ok_or("missing moonrise")?,
+            );
+            moonset.push(
+                item.get("moonset")
+                    .and_then(|v| v.as_i64())
+                    .ok_or("missing moonset")?,
+            );
+            moon_phase.push(
+                item.get("moon_phase")
+                    .and_then(|v| v.as_f64())
+                    .ok_or("missing moon_phase")?,
+            );
 
             // CRITICAL: Extract from NESTED temp object
             let temp_obj = item
@@ -770,12 +893,42 @@ impl OpenWeatherFdw {
                 .and_then(|v| v.as_object())
                 .ok_or("missing temp object")?;
 
-            temp_day.push(temp_obj.get("day").and_then(|v| v.as_f64()).ok_or("missing temp.day")?);
-            temp_min.push(temp_obj.get("min").and_then(|v| v.as_f64()).ok_or("missing temp.min")?);
-            temp_max.push(temp_obj.get("max").and_then(|v| v.as_f64()).ok_or("missing temp.max")?);
-            temp_night.push(temp_obj.get("night").and_then(|v| v.as_f64()).ok_or("missing temp.night")?);
-            temp_eve.push(temp_obj.get("eve").and_then(|v| v.as_f64()).ok_or("missing temp.eve")?);
-            temp_morn.push(temp_obj.get("morn").and_then(|v| v.as_f64()).ok_or("missing temp.morn")?);
+            temp_day.push(
+                temp_obj
+                    .get("day")
+                    .and_then(|v| v.as_f64())
+                    .ok_or("missing temp.day")?,
+            );
+            temp_min.push(
+                temp_obj
+                    .get("min")
+                    .and_then(|v| v.as_f64())
+                    .ok_or("missing temp.min")?,
+            );
+            temp_max.push(
+                temp_obj
+                    .get("max")
+                    .and_then(|v| v.as_f64())
+                    .ok_or("missing temp.max")?,
+            );
+            temp_night.push(
+                temp_obj
+                    .get("night")
+                    .and_then(|v| v.as_f64())
+                    .ok_or("missing temp.night")?,
+            );
+            temp_eve.push(
+                temp_obj
+                    .get("eve")
+                    .and_then(|v| v.as_f64())
+                    .ok_or("missing temp.eve")?,
+            );
+            temp_morn.push(
+                temp_obj
+                    .get("morn")
+                    .and_then(|v| v.as_f64())
+                    .ok_or("missing temp.morn")?,
+            );
 
             // CRITICAL: Extract from NESTED feels_like object
             let feels_like_obj = item
@@ -783,29 +936,102 @@ impl OpenWeatherFdw {
                 .and_then(|v| v.as_object())
                 .ok_or("missing feels_like object")?;
 
-            feels_like_day.push(feels_like_obj.get("day").and_then(|v| v.as_f64()).ok_or("missing feels_like.day")?);
-            feels_like_night.push(feels_like_obj.get("night").and_then(|v| v.as_f64()).ok_or("missing feels_like.night")?);
-            feels_like_eve.push(feels_like_obj.get("eve").and_then(|v| v.as_f64()).ok_or("missing feels_like.eve")?);
-            feels_like_morn.push(feels_like_obj.get("morn").and_then(|v| v.as_f64()).ok_or("missing feels_like.morn")?);
+            feels_like_day.push(
+                feels_like_obj
+                    .get("day")
+                    .and_then(|v| v.as_f64())
+                    .ok_or("missing feels_like.day")?,
+            );
+            feels_like_night.push(
+                feels_like_obj
+                    .get("night")
+                    .and_then(|v| v.as_f64())
+                    .ok_or("missing feels_like.night")?,
+            );
+            feels_like_eve.push(
+                feels_like_obj
+                    .get("eve")
+                    .and_then(|v| v.as_f64())
+                    .ok_or("missing feels_like.eve")?,
+            );
+            feels_like_morn.push(
+                feels_like_obj
+                    .get("morn")
+                    .and_then(|v| v.as_f64())
+                    .ok_or("missing feels_like.morn")?,
+            );
 
-            pressure.push(item.get("pressure").and_then(|v| v.as_i64()).ok_or("missing pressure")?);
-            humidity.push(item.get("humidity").and_then(|v| v.as_i64()).ok_or("missing humidity")?);
-            dew_point.push(item.get("dew_point").and_then(|v| v.as_f64()).ok_or("missing dew_point")?);
-            wind_speed.push(item.get("wind_speed").and_then(|v| v.as_f64()).ok_or("missing wind_speed")?);
-            wind_deg.push(item.get("wind_deg").and_then(|v| v.as_i64()).ok_or("missing wind_deg")?);
+            pressure.push(
+                item.get("pressure")
+                    .and_then(|v| v.as_i64())
+                    .ok_or("missing pressure")?,
+            );
+            humidity.push(
+                item.get("humidity")
+                    .and_then(|v| v.as_i64())
+                    .ok_or("missing humidity")?,
+            );
+            dew_point.push(
+                item.get("dew_point")
+                    .and_then(|v| v.as_f64())
+                    .ok_or("missing dew_point")?,
+            );
+            wind_speed.push(
+                item.get("wind_speed")
+                    .and_then(|v| v.as_f64())
+                    .ok_or("missing wind_speed")?,
+            );
+            wind_deg.push(
+                item.get("wind_deg")
+                    .and_then(|v| v.as_i64())
+                    .ok_or("missing wind_deg")?,
+            );
             wind_gust.push(item.get("wind_gust").and_then(|v| v.as_f64()));
-            clouds.push(item.get("clouds").and_then(|v| v.as_i64()).ok_or("missing clouds")?);
-            pop.push(item.get("pop").and_then(|v| v.as_f64()).ok_or("missing pop")?);
+            clouds.push(
+                item.get("clouds")
+                    .and_then(|v| v.as_i64())
+                    .ok_or("missing clouds")?,
+            );
+            pop.push(
+                item.get("pop")
+                    .and_then(|v| v.as_f64())
+                    .ok_or("missing pop")?,
+            );
             rain.push(item.get("rain").and_then(|v| v.as_f64()));
             snow.push(item.get("snow").and_then(|v| v.as_f64()));
-            uvi.push(item.get("uvi").and_then(|v| v.as_f64()).ok_or("missing uvi")?);
+            uvi.push(
+                item.get("uvi")
+                    .and_then(|v| v.as_f64())
+                    .ok_or("missing uvi")?,
+            );
 
             // Extract weather from weather[0]
-            let weather_arr = item.get("weather").and_then(|v| v.as_array()).ok_or("missing weather array")?;
-            let weather = weather_arr.get(0).ok_or("weather array is empty")?;
-            weather_main.push(weather.get("main").and_then(|v| v.as_str()).unwrap_or("Unknown").to_string());
-            weather_description.push(weather.get("description").and_then(|v| v.as_str()).unwrap_or("unknown").to_string());
-            weather_icon.push(weather.get("icon").and_then(|v| v.as_str()).unwrap_or("01d").to_string());
+            let weather_arr = item
+                .get("weather")
+                .and_then(|v| v.as_array())
+                .ok_or("missing weather array")?;
+            let weather = weather_arr.first().ok_or("weather array is empty")?;
+            weather_main.push(
+                weather
+                    .get("main")
+                    .and_then(|v| v.as_str())
+                    .unwrap_or("Unknown")
+                    .to_string(),
+            );
+            weather_description.push(
+                weather
+                    .get("description")
+                    .and_then(|v| v.as_str())
+                    .unwrap_or("unknown")
+                    .to_string(),
+            );
+            weather_icon.push(
+                weather
+                    .get("icon")
+                    .and_then(|v| v.as_str())
+                    .unwrap_or("01d")
+                    .to_string(),
+            );
         }
 
         self.data = EndpointData::DailyForecast {
@@ -843,7 +1069,10 @@ impl OpenWeatherFdw {
             weather_icon,
         };
 
-        utils::report_info(&format!("Parsed {} daily forecast data points", self.data.row_count()));
+        utils::report_info(&format!(
+            "Parsed {} daily forecast data points",
+            self.data.row_count()
+        ));
 
         Ok(())
     }
@@ -930,27 +1159,70 @@ impl OpenWeatherFdw {
             .and_then(|v| v.as_array())
             .ok_or("missing 'data' array in timemachine response")?;
 
-        let historical = data_arr
-            .get(0)
-            .ok_or("data array is empty")?;
+        let historical = data_arr.first().ok_or("data array is empty")?;
 
-        let dt = historical.get("dt").and_then(|v| v.as_i64()).ok_or("missing dt")?;
-        let temp = historical.get("temp").and_then(|v| v.as_f64()).ok_or("missing temp")?;
-        let feels_like = historical.get("feels_like").and_then(|v| v.as_f64()).ok_or("missing feels_like")?;
-        let pressure = historical.get("pressure").and_then(|v| v.as_i64()).ok_or("missing pressure")?;
-        let humidity = historical.get("humidity").and_then(|v| v.as_i64()).ok_or("missing humidity")?;
-        let dew_point = historical.get("dew_point").and_then(|v| v.as_f64()).ok_or("missing dew_point")?;
-        let clouds = historical.get("clouds").and_then(|v| v.as_i64()).ok_or("missing clouds")?;
-        let visibility = historical.get("visibility").and_then(|v| v.as_i64()).ok_or("missing visibility")?;
-        let wind_speed = historical.get("wind_speed").and_then(|v| v.as_f64()).ok_or("missing wind_speed")?;
-        let wind_deg = historical.get("wind_deg").and_then(|v| v.as_i64()).ok_or("missing wind_deg")?;
+        let dt = historical
+            .get("dt")
+            .and_then(|v| v.as_i64())
+            .ok_or("missing dt")?;
+        let temp = historical
+            .get("temp")
+            .and_then(|v| v.as_f64())
+            .ok_or("missing temp")?;
+        let feels_like = historical
+            .get("feels_like")
+            .and_then(|v| v.as_f64())
+            .ok_or("missing feels_like")?;
+        let pressure = historical
+            .get("pressure")
+            .and_then(|v| v.as_i64())
+            .ok_or("missing pressure")?;
+        let humidity = historical
+            .get("humidity")
+            .and_then(|v| v.as_i64())
+            .ok_or("missing humidity")?;
+        let dew_point = historical
+            .get("dew_point")
+            .and_then(|v| v.as_f64())
+            .ok_or("missing dew_point")?;
+        let clouds = historical
+            .get("clouds")
+            .and_then(|v| v.as_i64())
+            .ok_or("missing clouds")?;
+        let visibility = historical
+            .get("visibility")
+            .and_then(|v| v.as_i64())
+            .ok_or("missing visibility")?;
+        let wind_speed = historical
+            .get("wind_speed")
+            .and_then(|v| v.as_f64())
+            .ok_or("missing wind_speed")?;
+        let wind_deg = historical
+            .get("wind_deg")
+            .and_then(|v| v.as_i64())
+            .ok_or("missing wind_deg")?;
 
         // Extract weather from weather[0]
-        let weather_arr = historical.get("weather").and_then(|v| v.as_array()).ok_or("missing weather array")?;
-        let weather = weather_arr.get(0).ok_or("weather array is empty")?;
-        let weather_main = weather.get("main").and_then(|v| v.as_str()).unwrap_or("Unknown").to_string();
-        let weather_description = weather.get("description").and_then(|v| v.as_str()).unwrap_or("unknown").to_string();
-        let weather_icon = weather.get("icon").and_then(|v| v.as_str()).unwrap_or("01d").to_string();
+        let weather_arr = historical
+            .get("weather")
+            .and_then(|v| v.as_array())
+            .ok_or("missing weather array")?;
+        let weather = weather_arr.first().ok_or("weather array is empty")?;
+        let weather_main = weather
+            .get("main")
+            .and_then(|v| v.as_str())
+            .unwrap_or("Unknown")
+            .to_string();
+        let weather_description = weather
+            .get("description")
+            .and_then(|v| v.as_str())
+            .unwrap_or("unknown")
+            .to_string();
+        let weather_icon = weather
+            .get("icon")
+            .and_then(|v| v.as_str())
+            .unwrap_or("01d")
+            .to_string();
 
         self.data = EndpointData::HistoricalWeather {
             lat: self.lat,
@@ -977,20 +1249,59 @@ impl OpenWeatherFdw {
 
     fn parse_daily_summary(&mut self, resp_json: &JsonValue) -> FdwResult {
         // Extract top-level metadata
-        let lat = resp_json.get("lat").and_then(|v| v.as_f64()).ok_or("missing lat")?;
-        let lon = resp_json.get("lon").and_then(|v| v.as_f64()).ok_or("missing lon")?;
-        let tz = resp_json.get("tz").and_then(|v| v.as_str()).unwrap_or("+00:00").to_string();
-        let date = resp_json.get("date").and_then(|v| v.as_str()).unwrap_or("").to_string();
-        let units = resp_json.get("units").and_then(|v| v.as_str()).unwrap_or("metric").to_string();
+        let lat = resp_json
+            .get("lat")
+            .and_then(|v| v.as_f64())
+            .ok_or("missing lat")?;
+        let lon = resp_json
+            .get("lon")
+            .and_then(|v| v.as_f64())
+            .ok_or("missing lon")?;
+        let tz = resp_json
+            .get("tz")
+            .and_then(|v| v.as_str())
+            .unwrap_or("+00:00")
+            .to_string();
+        let date = resp_json
+            .get("date")
+            .and_then(|v| v.as_str())
+            .unwrap_or("")
+            .to_string();
+        let units = resp_json
+            .get("units")
+            .and_then(|v| v.as_str())
+            .unwrap_or("metric")
+            .to_string();
 
         // Extract nested temperature object
-        let temp_obj = resp_json.get("temperature").and_then(|v| v.as_object()).ok_or("missing temperature object")?;
-        let temp_min = temp_obj.get("min").and_then(|v| v.as_f64()).ok_or("missing temperature.min")?;
-        let temp_max = temp_obj.get("max").and_then(|v| v.as_f64()).ok_or("missing temperature.max")?;
-        let temp_morning = temp_obj.get("morning").and_then(|v| v.as_f64()).unwrap_or(0.0);
-        let temp_afternoon = temp_obj.get("afternoon").and_then(|v| v.as_f64()).unwrap_or(0.0);
-        let temp_evening = temp_obj.get("evening").and_then(|v| v.as_f64()).unwrap_or(0.0);
-        let temp_night = temp_obj.get("night").and_then(|v| v.as_f64()).unwrap_or(0.0);
+        let temp_obj = resp_json
+            .get("temperature")
+            .and_then(|v| v.as_object())
+            .ok_or("missing temperature object")?;
+        let temp_min = temp_obj
+            .get("min")
+            .and_then(|v| v.as_f64())
+            .ok_or("missing temperature.min")?;
+        let temp_max = temp_obj
+            .get("max")
+            .and_then(|v| v.as_f64())
+            .ok_or("missing temperature.max")?;
+        let temp_morning = temp_obj
+            .get("morning")
+            .and_then(|v| v.as_f64())
+            .unwrap_or(0.0);
+        let temp_afternoon = temp_obj
+            .get("afternoon")
+            .and_then(|v| v.as_f64())
+            .unwrap_or(0.0);
+        let temp_evening = temp_obj
+            .get("evening")
+            .and_then(|v| v.as_f64())
+            .unwrap_or(0.0);
+        let temp_night = temp_obj
+            .get("night")
+            .and_then(|v| v.as_f64())
+            .unwrap_or(0.0);
 
         // Extract nested cloud_cover.afternoon
         let cloud_cover_afternoon = resp_json
@@ -1025,10 +1336,22 @@ impl OpenWeatherFdw {
             .unwrap_or(0.0);
 
         // Extract nested wind.max.speed and wind.max.direction
-        let wind_obj = resp_json.get("wind").and_then(|v| v.as_object()).ok_or("missing wind object")?;
-        let wind_max = wind_obj.get("max").and_then(|v| v.as_object()).ok_or("missing wind.max")?;
-        let wind_max_speed = wind_max.get("speed").and_then(|v| v.as_f64()).unwrap_or(0.0);
-        let wind_max_direction = wind_max.get("direction").and_then(|v| v.as_f64()).unwrap_or(0.0);
+        let wind_obj = resp_json
+            .get("wind")
+            .and_then(|v| v.as_object())
+            .ok_or("missing wind object")?;
+        let wind_max = wind_obj
+            .get("max")
+            .and_then(|v| v.as_object())
+            .ok_or("missing wind.max")?;
+        let wind_max_speed = wind_max
+            .get("speed")
+            .and_then(|v| v.as_f64())
+            .unwrap_or(0.0);
+        let wind_max_direction = wind_max
+            .get("direction")
+            .and_then(|v| v.as_f64())
+            .unwrap_or(0.0);
 
         self.data = EndpointData::DailySummary {
             lat,
@@ -1057,12 +1380,34 @@ impl OpenWeatherFdw {
 
     fn parse_weather_overview(&mut self, resp_json: &JsonValue) -> FdwResult {
         // Extract flat fields
-        let lat = resp_json.get("lat").and_then(|v| v.as_f64()).ok_or("missing lat")?;
-        let lon = resp_json.get("lon").and_then(|v| v.as_f64()).ok_or("missing lon")?;
-        let tz = resp_json.get("tz").and_then(|v| v.as_str()).unwrap_or("+00:00").to_string();
-        let date = resp_json.get("date").and_then(|v| v.as_str()).unwrap_or("").to_string();
-        let units = resp_json.get("units").and_then(|v| v.as_str()).unwrap_or("metric").to_string();
-        let weather_overview = resp_json.get("weather_overview").and_then(|v| v.as_str()).unwrap_or("").to_string();
+        let lat = resp_json
+            .get("lat")
+            .and_then(|v| v.as_f64())
+            .ok_or("missing lat")?;
+        let lon = resp_json
+            .get("lon")
+            .and_then(|v| v.as_f64())
+            .ok_or("missing lon")?;
+        let tz = resp_json
+            .get("tz")
+            .and_then(|v| v.as_str())
+            .unwrap_or("+00:00")
+            .to_string();
+        let date = resp_json
+            .get("date")
+            .and_then(|v| v.as_str())
+            .unwrap_or("")
+            .to_string();
+        let units = resp_json
+            .get("units")
+            .and_then(|v| v.as_str())
+            .unwrap_or("metric")
+            .to_string();
+        let weather_overview = resp_json
+            .get("weather_overview")
+            .and_then(|v| v.as_str())
+            .unwrap_or("")
+            .to_string();
 
         self.data = EndpointData::WeatherOverview {
             lat,
@@ -1109,54 +1454,50 @@ impl OpenWeatherFdw {
                 weather_main,
                 weather_description,
                 weather_icon,
-            } => {
-                match tgt_col_name.as_str() {
-                    "lat" => Some(Cell::Numeric(*lat)),
-                    "lon" => Some(Cell::Numeric(*lon)),
-                    "timezone" => Some(Cell::String(timezone.clone())),
-                    "dt" => Some(Cell::I64(*dt)),
-                    "temp" => Some(Cell::Numeric(*temp)),
-                    "feels_like" => Some(Cell::Numeric(*feels_like)),
-                    "pressure" => Some(Cell::I64(*pressure)),
-                    "humidity" => Some(Cell::I64(*humidity)),
-                    "dew_point" => Some(Cell::Numeric(*dew_point)),
-                    "uvi" => Some(Cell::Numeric(*uvi)),
-                    "clouds" => Some(Cell::I64(*clouds)),
-                    "visibility" => Some(Cell::I64(*visibility)),
-                    "wind_speed" => Some(Cell::Numeric(*wind_speed)),
-                    "wind_deg" => Some(Cell::I64(*wind_deg)),
-                    "wind_gust" => wind_gust.map(Cell::Numeric),
-                    "weather_main" => Some(Cell::String(weather_main.clone())),
-                    "weather_description" => Some(Cell::String(weather_description.clone())),
-                    "weather_icon" => Some(Cell::String(weather_icon.clone())),
-                    _ => {
-                        return Err(format!(
-                            "unknown column '{}' for current_weather endpoint",
-                            tgt_col_name
-                        ))
-                    }
+            } => match tgt_col_name.as_str() {
+                "lat" => Some(Cell::Numeric(*lat)),
+                "lon" => Some(Cell::Numeric(*lon)),
+                "timezone" => Some(Cell::String(timezone.clone())),
+                "dt" => Some(Cell::I64(*dt)),
+                "temp" => Some(Cell::Numeric(*temp)),
+                "feels_like" => Some(Cell::Numeric(*feels_like)),
+                "pressure" => Some(Cell::I64(*pressure)),
+                "humidity" => Some(Cell::I64(*humidity)),
+                "dew_point" => Some(Cell::Numeric(*dew_point)),
+                "uvi" => Some(Cell::Numeric(*uvi)),
+                "clouds" => Some(Cell::I64(*clouds)),
+                "visibility" => Some(Cell::I64(*visibility)),
+                "wind_speed" => Some(Cell::Numeric(*wind_speed)),
+                "wind_deg" => Some(Cell::I64(*wind_deg)),
+                "wind_gust" => wind_gust.map(Cell::Numeric),
+                "weather_main" => Some(Cell::String(weather_main.clone())),
+                "weather_description" => Some(Cell::String(weather_description.clone())),
+                "weather_icon" => Some(Cell::String(weather_icon.clone())),
+                _ => {
+                    return Err(format!(
+                        "unknown column '{}' for current_weather endpoint",
+                        tgt_col_name
+                    ))
                 }
-            }
+            },
 
             EndpointData::MinutelyForecast {
                 lat,
                 lon,
                 timestamps,
                 precipitation,
-            } => {
-                match tgt_col_name.as_str() {
-                    "lat" => Some(Cell::Numeric(*lat)),
-                    "lon" => Some(Cell::Numeric(*lon)),
-                    "dt" => timestamps.get(row_idx).map(|&v| Cell::I64(v)),
-                    "precipitation" => precipitation.get(row_idx).map(|&v| Cell::Numeric(v)),
-                    _ => {
-                        return Err(format!(
-                            "unknown column '{}' for minutely_forecast endpoint",
-                            tgt_col_name
-                        ))
-                    }
+            } => match tgt_col_name.as_str() {
+                "lat" => Some(Cell::Numeric(*lat)),
+                "lon" => Some(Cell::Numeric(*lon)),
+                "dt" => timestamps.get(row_idx).map(|&v| Cell::I64(v)),
+                "precipitation" => precipitation.get(row_idx).map(|&v| Cell::Numeric(v)),
+                _ => {
+                    return Err(format!(
+                        "unknown column '{}' for minutely_forecast endpoint",
+                        tgt_col_name
+                    ))
                 }
-            }
+            },
 
             EndpointData::HourlyForecast {
                 lat,
@@ -1179,36 +1520,36 @@ impl OpenWeatherFdw {
                 weather_main,
                 weather_description,
                 weather_icon,
-            } => {
-                match tgt_col_name.as_str() {
-                    "lat" => Some(Cell::Numeric(*lat)),
-                    "lon" => Some(Cell::Numeric(*lon)),
-                    "dt" => timestamps.get(row_idx).map(|&v| Cell::I64(v)),
-                    "temp" => temps.get(row_idx).map(|&v| Cell::Numeric(v)),
-                    "feels_like" => feels_like.get(row_idx).map(|&v| Cell::Numeric(v)),
-                    "pressure" => pressure.get(row_idx).map(|&v| Cell::I64(v)),
-                    "humidity" => humidity.get(row_idx).map(|&v| Cell::I64(v)),
-                    "dew_point" => dew_point.get(row_idx).map(|&v| Cell::Numeric(v)),
-                    "uvi" => uvi.get(row_idx).map(|&v| Cell::Numeric(v)),
-                    "clouds" => clouds.get(row_idx).map(|&v| Cell::I64(v)),
-                    "visibility" => visibility.get(row_idx).map(|&v| Cell::I64(v)),
-                    "wind_speed" => wind_speed.get(row_idx).map(|&v| Cell::Numeric(v)),
-                    "wind_deg" => wind_deg.get(row_idx).map(|&v| Cell::I64(v)),
-                    "wind_gust" => wind_gust.get(row_idx).and_then(|&v| v.map(Cell::Numeric)),
-                    "pop" => pop.get(row_idx).map(|&v| Cell::Numeric(v)),
-                    "rain_1h" => rain_1h.get(row_idx).and_then(|&v| v.map(Cell::Numeric)),
-                    "snow_1h" => snow_1h.get(row_idx).and_then(|&v| v.map(Cell::Numeric)),
-                    "weather_main" => weather_main.get(row_idx).map(|v| Cell::String(v.clone())),
-                    "weather_description" => weather_description.get(row_idx).map(|v| Cell::String(v.clone())),
-                    "weather_icon" => weather_icon.get(row_idx).map(|v| Cell::String(v.clone())),
-                    _ => {
-                        return Err(format!(
-                            "unknown column '{}' for hourly_forecast endpoint",
-                            tgt_col_name
-                        ))
-                    }
+            } => match tgt_col_name.as_str() {
+                "lat" => Some(Cell::Numeric(*lat)),
+                "lon" => Some(Cell::Numeric(*lon)),
+                "dt" => timestamps.get(row_idx).map(|&v| Cell::I64(v)),
+                "temp" => temps.get(row_idx).map(|&v| Cell::Numeric(v)),
+                "feels_like" => feels_like.get(row_idx).map(|&v| Cell::Numeric(v)),
+                "pressure" => pressure.get(row_idx).map(|&v| Cell::I64(v)),
+                "humidity" => humidity.get(row_idx).map(|&v| Cell::I64(v)),
+                "dew_point" => dew_point.get(row_idx).map(|&v| Cell::Numeric(v)),
+                "uvi" => uvi.get(row_idx).map(|&v| Cell::Numeric(v)),
+                "clouds" => clouds.get(row_idx).map(|&v| Cell::I64(v)),
+                "visibility" => visibility.get(row_idx).map(|&v| Cell::I64(v)),
+                "wind_speed" => wind_speed.get(row_idx).map(|&v| Cell::Numeric(v)),
+                "wind_deg" => wind_deg.get(row_idx).map(|&v| Cell::I64(v)),
+                "wind_gust" => wind_gust.get(row_idx).and_then(|&v| v.map(Cell::Numeric)),
+                "pop" => pop.get(row_idx).map(|&v| Cell::Numeric(v)),
+                "rain_1h" => rain_1h.get(row_idx).and_then(|&v| v.map(Cell::Numeric)),
+                "snow_1h" => snow_1h.get(row_idx).and_then(|&v| v.map(Cell::Numeric)),
+                "weather_main" => weather_main.get(row_idx).map(|v| Cell::String(v.clone())),
+                "weather_description" => weather_description
+                    .get(row_idx)
+                    .map(|v| Cell::String(v.clone())),
+                "weather_icon" => weather_icon.get(row_idx).map(|v| Cell::String(v.clone())),
+                _ => {
+                    return Err(format!(
+                        "unknown column '{}' for hourly_forecast endpoint",
+                        tgt_col_name
+                    ))
                 }
-            }
+            },
 
             EndpointData::DailyForecast {
                 lat,
@@ -1243,48 +1584,48 @@ impl OpenWeatherFdw {
                 weather_main,
                 weather_description,
                 weather_icon,
-            } => {
-                match tgt_col_name.as_str() {
-                    "lat" => Some(Cell::Numeric(*lat)),
-                    "lon" => Some(Cell::Numeric(*lon)),
-                    "dt" => timestamps.get(row_idx).map(|&v| Cell::I64(v)),
-                    "sunrise" => sunrise.get(row_idx).map(|&v| Cell::I64(v)),
-                    "sunset" => sunset.get(row_idx).map(|&v| Cell::I64(v)),
-                    "moonrise" => moonrise.get(row_idx).map(|&v| Cell::I64(v)),
-                    "moonset" => moonset.get(row_idx).map(|&v| Cell::I64(v)),
-                    "moon_phase" => moon_phase.get(row_idx).map(|&v| Cell::Numeric(v)),
-                    "temp_day" => temp_day.get(row_idx).map(|&v| Cell::Numeric(v)),
-                    "temp_min" => temp_min.get(row_idx).map(|&v| Cell::Numeric(v)),
-                    "temp_max" => temp_max.get(row_idx).map(|&v| Cell::Numeric(v)),
-                    "temp_night" => temp_night.get(row_idx).map(|&v| Cell::Numeric(v)),
-                    "temp_eve" => temp_eve.get(row_idx).map(|&v| Cell::Numeric(v)),
-                    "temp_morn" => temp_morn.get(row_idx).map(|&v| Cell::Numeric(v)),
-                    "feels_like_day" => feels_like_day.get(row_idx).map(|&v| Cell::Numeric(v)),
-                    "feels_like_night" => feels_like_night.get(row_idx).map(|&v| Cell::Numeric(v)),
-                    "feels_like_eve" => feels_like_eve.get(row_idx).map(|&v| Cell::Numeric(v)),
-                    "feels_like_morn" => feels_like_morn.get(row_idx).map(|&v| Cell::Numeric(v)),
-                    "pressure" => pressure.get(row_idx).map(|&v| Cell::I64(v)),
-                    "humidity" => humidity.get(row_idx).map(|&v| Cell::I64(v)),
-                    "dew_point" => dew_point.get(row_idx).map(|&v| Cell::Numeric(v)),
-                    "wind_speed" => wind_speed.get(row_idx).map(|&v| Cell::Numeric(v)),
-                    "wind_deg" => wind_deg.get(row_idx).map(|&v| Cell::I64(v)),
-                    "wind_gust" => wind_gust.get(row_idx).and_then(|&v| v.map(Cell::Numeric)),
-                    "clouds" => clouds.get(row_idx).map(|&v| Cell::I64(v)),
-                    "pop" => pop.get(row_idx).map(|&v| Cell::Numeric(v)),
-                    "rain" => rain.get(row_idx).and_then(|&v| v.map(Cell::Numeric)),
-                    "snow" => snow.get(row_idx).and_then(|&v| v.map(Cell::Numeric)),
-                    "uvi" => uvi.get(row_idx).map(|&v| Cell::Numeric(v)),
-                    "weather_main" => weather_main.get(row_idx).map(|v| Cell::String(v.clone())),
-                    "weather_description" => weather_description.get(row_idx).map(|v| Cell::String(v.clone())),
-                    "weather_icon" => weather_icon.get(row_idx).map(|v| Cell::String(v.clone())),
-                    _ => {
-                        return Err(format!(
-                            "unknown column '{}' for daily_forecast endpoint",
-                            tgt_col_name
-                        ))
-                    }
+            } => match tgt_col_name.as_str() {
+                "lat" => Some(Cell::Numeric(*lat)),
+                "lon" => Some(Cell::Numeric(*lon)),
+                "dt" => timestamps.get(row_idx).map(|&v| Cell::I64(v)),
+                "sunrise" => sunrise.get(row_idx).map(|&v| Cell::I64(v)),
+                "sunset" => sunset.get(row_idx).map(|&v| Cell::I64(v)),
+                "moonrise" => moonrise.get(row_idx).map(|&v| Cell::I64(v)),
+                "moonset" => moonset.get(row_idx).map(|&v| Cell::I64(v)),
+                "moon_phase" => moon_phase.get(row_idx).map(|&v| Cell::Numeric(v)),
+                "temp_day" => temp_day.get(row_idx).map(|&v| Cell::Numeric(v)),
+                "temp_min" => temp_min.get(row_idx).map(|&v| Cell::Numeric(v)),
+                "temp_max" => temp_max.get(row_idx).map(|&v| Cell::Numeric(v)),
+                "temp_night" => temp_night.get(row_idx).map(|&v| Cell::Numeric(v)),
+                "temp_eve" => temp_eve.get(row_idx).map(|&v| Cell::Numeric(v)),
+                "temp_morn" => temp_morn.get(row_idx).map(|&v| Cell::Numeric(v)),
+                "feels_like_day" => feels_like_day.get(row_idx).map(|&v| Cell::Numeric(v)),
+                "feels_like_night" => feels_like_night.get(row_idx).map(|&v| Cell::Numeric(v)),
+                "feels_like_eve" => feels_like_eve.get(row_idx).map(|&v| Cell::Numeric(v)),
+                "feels_like_morn" => feels_like_morn.get(row_idx).map(|&v| Cell::Numeric(v)),
+                "pressure" => pressure.get(row_idx).map(|&v| Cell::I64(v)),
+                "humidity" => humidity.get(row_idx).map(|&v| Cell::I64(v)),
+                "dew_point" => dew_point.get(row_idx).map(|&v| Cell::Numeric(v)),
+                "wind_speed" => wind_speed.get(row_idx).map(|&v| Cell::Numeric(v)),
+                "wind_deg" => wind_deg.get(row_idx).map(|&v| Cell::I64(v)),
+                "wind_gust" => wind_gust.get(row_idx).and_then(|&v| v.map(Cell::Numeric)),
+                "clouds" => clouds.get(row_idx).map(|&v| Cell::I64(v)),
+                "pop" => pop.get(row_idx).map(|&v| Cell::Numeric(v)),
+                "rain" => rain.get(row_idx).and_then(|&v| v.map(Cell::Numeric)),
+                "snow" => snow.get(row_idx).and_then(|&v| v.map(Cell::Numeric)),
+                "uvi" => uvi.get(row_idx).map(|&v| Cell::Numeric(v)),
+                "weather_main" => weather_main.get(row_idx).map(|v| Cell::String(v.clone())),
+                "weather_description" => weather_description
+                    .get(row_idx)
+                    .map(|v| Cell::String(v.clone())),
+                "weather_icon" => weather_icon.get(row_idx).map(|v| Cell::String(v.clone())),
+                _ => {
+                    return Err(format!(
+                        "unknown column '{}' for daily_forecast endpoint",
+                        tgt_col_name
+                    ))
                 }
-            }
+            },
 
             EndpointData::WeatherAlerts { lat, lon, alerts } => {
                 let alert = alerts.get(row_idx).ok_or("alert index out of bounds")?;
@@ -1325,31 +1666,29 @@ impl OpenWeatherFdw {
                 weather_main,
                 weather_description,
                 weather_icon,
-            } => {
-                match tgt_col_name.as_str() {
-                    "lat" => Some(Cell::Numeric(*lat)),
-                    "lon" => Some(Cell::Numeric(*lon)),
-                    "dt" => Some(Cell::I64(*dt)),
-                    "temp" => Some(Cell::Numeric(*temp)),
-                    "feels_like" => Some(Cell::Numeric(*feels_like)),
-                    "pressure" => Some(Cell::I64(*pressure)),
-                    "humidity" => Some(Cell::I64(*humidity)),
-                    "dew_point" => Some(Cell::Numeric(*dew_point)),
-                    "clouds" => Some(Cell::I64(*clouds)),
-                    "visibility" => Some(Cell::I64(*visibility)),
-                    "wind_speed" => Some(Cell::Numeric(*wind_speed)),
-                    "wind_deg" => Some(Cell::I64(*wind_deg)),
-                    "weather_main" => Some(Cell::String(weather_main.clone())),
-                    "weather_description" => Some(Cell::String(weather_description.clone())),
-                    "weather_icon" => Some(Cell::String(weather_icon.clone())),
-                    _ => {
-                        return Err(format!(
-                            "unknown column '{}' for historical_weather endpoint",
-                            tgt_col_name
-                        ))
-                    }
+            } => match tgt_col_name.as_str() {
+                "lat" => Some(Cell::Numeric(*lat)),
+                "lon" => Some(Cell::Numeric(*lon)),
+                "dt" => Some(Cell::I64(*dt)),
+                "temp" => Some(Cell::Numeric(*temp)),
+                "feels_like" => Some(Cell::Numeric(*feels_like)),
+                "pressure" => Some(Cell::I64(*pressure)),
+                "humidity" => Some(Cell::I64(*humidity)),
+                "dew_point" => Some(Cell::Numeric(*dew_point)),
+                "clouds" => Some(Cell::I64(*clouds)),
+                "visibility" => Some(Cell::I64(*visibility)),
+                "wind_speed" => Some(Cell::Numeric(*wind_speed)),
+                "wind_deg" => Some(Cell::I64(*wind_deg)),
+                "weather_main" => Some(Cell::String(weather_main.clone())),
+                "weather_description" => Some(Cell::String(weather_description.clone())),
+                "weather_icon" => Some(Cell::String(weather_icon.clone())),
+                _ => {
+                    return Err(format!(
+                        "unknown column '{}' for historical_weather endpoint",
+                        tgt_col_name
+                    ))
                 }
-            }
+            },
 
             EndpointData::DailySummary {
                 lat,
@@ -1369,33 +1708,31 @@ impl OpenWeatherFdw {
                 precipitation_total,
                 wind_max_speed,
                 wind_max_direction,
-            } => {
-                match tgt_col_name.as_str() {
-                    "lat" => Some(Cell::Numeric(*lat)),
-                    "lon" => Some(Cell::Numeric(*lon)),
-                    "tz" => Some(Cell::String(tz.clone())),
-                    "date" => Some(Cell::String(date.clone())),
-                    "units" => Some(Cell::String(units.clone())),
-                    "temp_min" => Some(Cell::Numeric(*temp_min)),
-                    "temp_max" => Some(Cell::Numeric(*temp_max)),
-                    "temp_morning" => Some(Cell::Numeric(*temp_morning)),
-                    "temp_afternoon" => Some(Cell::Numeric(*temp_afternoon)),
-                    "temp_evening" => Some(Cell::Numeric(*temp_evening)),
-                    "temp_night" => Some(Cell::Numeric(*temp_night)),
-                    "cloud_cover_afternoon" => Some(Cell::Numeric(*cloud_cover_afternoon)),
-                    "humidity_afternoon" => Some(Cell::Numeric(*humidity_afternoon)),
-                    "pressure_afternoon" => Some(Cell::Numeric(*pressure_afternoon)),
-                    "precipitation_total" => Some(Cell::Numeric(*precipitation_total)),
-                    "wind_max_speed" => Some(Cell::Numeric(*wind_max_speed)),
-                    "wind_max_direction" => Some(Cell::Numeric(*wind_max_direction)),
-                    _ => {
-                        return Err(format!(
-                            "unknown column '{}' for daily_summary endpoint",
-                            tgt_col_name
-                        ))
-                    }
+            } => match tgt_col_name.as_str() {
+                "lat" => Some(Cell::Numeric(*lat)),
+                "lon" => Some(Cell::Numeric(*lon)),
+                "tz" => Some(Cell::String(tz.clone())),
+                "date" => Some(Cell::String(date.clone())),
+                "units" => Some(Cell::String(units.clone())),
+                "temp_min" => Some(Cell::Numeric(*temp_min)),
+                "temp_max" => Some(Cell::Numeric(*temp_max)),
+                "temp_morning" => Some(Cell::Numeric(*temp_morning)),
+                "temp_afternoon" => Some(Cell::Numeric(*temp_afternoon)),
+                "temp_evening" => Some(Cell::Numeric(*temp_evening)),
+                "temp_night" => Some(Cell::Numeric(*temp_night)),
+                "cloud_cover_afternoon" => Some(Cell::Numeric(*cloud_cover_afternoon)),
+                "humidity_afternoon" => Some(Cell::Numeric(*humidity_afternoon)),
+                "pressure_afternoon" => Some(Cell::Numeric(*pressure_afternoon)),
+                "precipitation_total" => Some(Cell::Numeric(*precipitation_total)),
+                "wind_max_speed" => Some(Cell::Numeric(*wind_max_speed)),
+                "wind_max_direction" => Some(Cell::Numeric(*wind_max_direction)),
+                _ => {
+                    return Err(format!(
+                        "unknown column '{}' for daily_summary endpoint",
+                        tgt_col_name
+                    ))
                 }
-            }
+            },
 
             EndpointData::WeatherOverview {
                 lat,
@@ -1404,22 +1741,20 @@ impl OpenWeatherFdw {
                 date,
                 units,
                 weather_overview,
-            } => {
-                match tgt_col_name.as_str() {
-                    "lat" => Some(Cell::Numeric(*lat)),
-                    "lon" => Some(Cell::Numeric(*lon)),
-                    "tz" => Some(Cell::String(tz.clone())),
-                    "date" => Some(Cell::String(date.clone())),
-                    "units" => Some(Cell::String(units.clone())),
-                    "weather_overview" => Some(Cell::String(weather_overview.clone())),
-                    _ => {
-                        return Err(format!(
-                            "unknown column '{}' for weather_overview endpoint",
-                            tgt_col_name
-                        ))
-                    }
+            } => match tgt_col_name.as_str() {
+                "lat" => Some(Cell::Numeric(*lat)),
+                "lon" => Some(Cell::Numeric(*lon)),
+                "tz" => Some(Cell::String(tz.clone())),
+                "date" => Some(Cell::String(date.clone())),
+                "units" => Some(Cell::String(units.clone())),
+                "weather_overview" => Some(Cell::String(weather_overview.clone())),
+                _ => {
+                    return Err(format!(
+                        "unknown column '{}' for weather_overview endpoint",
+                        tgt_col_name
+                    ))
                 }
-            }
+            },
 
             EndpointData::None => {
                 return Err("no data loaded - fetch_source_data not called".to_owned());
@@ -1501,10 +1836,10 @@ impl Guest for OpenWeatherFdwImpl {
         let instance = OpenWeatherFdw::this_mut();
 
         // Get base URL (default to OpenWeather API v3.0)
-        instance.base_url = opts
-            .get("api_url")
-            .map(|s| s.clone())
-            .unwrap_or_else(|| "https://api.openweathermap.org/data/3.0".to_string());
+        instance.base_url = match opts.get("api_url") {
+            Some(url) => url.clone(),
+            None => "https://api.openweathermap.org/data/3.0".to_string(),
+        };
 
         // Get API key (required) - framework handles api_key_id vault resolution automatically
         instance.api_key = opts
@@ -1517,7 +1852,8 @@ impl Guest for OpenWeatherFdwImpl {
             "user-agent".to_owned(),
             "Supabase Wrappers OpenWeather FDW".to_string(),
         ));
-        instance.headers
+        instance
+            .headers
             .push(("accept".to_owned(), "application/json".to_string()));
 
         utils::report_info(&format!(
@@ -1535,9 +1871,7 @@ impl Guest for OpenWeatherFdwImpl {
         let opts = ctx.get_options(&OptionsType::Table);
 
         // Parse endpoint type from 'object' option
-        let object_name = opts
-            .get("object")
-            .ok_or("'object' option is required")?;
+        let object_name = opts.get("object").ok_or("'object' option is required")?;
 
         let endpoint_type = EndpointType::from_object_name(&object_name)?;
         instance.endpoint_type = Some(endpoint_type);
@@ -1553,8 +1887,8 @@ impl Guest for OpenWeatherFdwImpl {
         // Extract optional parameters with defaults
         instance.units = OpenWeatherFdw::extract_qual_string(&quals, "units")
             .unwrap_or_else(|| "metric".to_string());
-        instance.lang = OpenWeatherFdw::extract_qual_string(&quals, "lang")
-            .unwrap_or_else(|| "en".to_string());
+        instance.lang =
+            OpenWeatherFdw::extract_qual_string(&quals, "lang").unwrap_or_else(|| "en".to_string());
 
         // Extract endpoint-specific parameters
         match endpoint_type {
@@ -1587,7 +1921,11 @@ impl Guest for OpenWeatherFdwImpl {
 
         // Check if we've exhausted all rows
         if instance.current_row >= instance.data.row_count() {
-            stats::inc_stats(FDW_NAME, stats::Metric::RowsOut, instance.current_row as i64);
+            stats::inc_stats(
+                FDW_NAME,
+                stats::Metric::RowsOut,
+                instance.current_row as i64,
+            );
             return Ok(None);
         }
 
