@@ -1824,8 +1824,9 @@ struct OpenWeatherFdwImpl;
 impl Guest for OpenWeatherFdwImpl {
     fn host_version_requirement() -> String {
         // Supabase Wrappers version requirement
-        // Changed from ^0.2.0 to ^0.1.0 to match local Supabase (0.1.5)
-        "^0.1.0".to_string()
+        // Production Supabase instances run 0.2.x
+        // This must match WIT declarations in wit/world.wit
+        "^0.2.0".to_string()
     }
 
     fn init(ctx: &Context) -> FdwResult {
@@ -1980,7 +1981,7 @@ impl Guest for OpenWeatherFdwImpl {
         _ctx: &Context,
         stmt: ImportForeignSchemaStmt,
     ) -> Result<Vec<String>, FdwError> {
-        // Generate schemas for all 6 supported endpoints
+        // Generate schemas for all 8 supported endpoints (v0.2.0)
         let ret = vec![
             // current_weather table (1 row from /onecall → current)
             format!(
@@ -2130,6 +2131,47 @@ impl Guest for OpenWeatherFdwImpl {
             )
             server {} options (
                 object 'historical_weather'
+            )"#,
+                stmt.server_name,
+            ),
+            // daily_summary table (1 row from /onecall/day_summary → daily aggregations)
+            format!(
+                r#"create foreign table if not exists daily_summary (
+                lat numeric,
+                lon numeric,
+                tz text,
+                date text,
+                units text,
+                temp_min numeric,
+                temp_max numeric,
+                temp_morning numeric,
+                temp_afternoon numeric,
+                temp_evening numeric,
+                temp_night numeric,
+                cloud_cover_afternoon numeric,
+                humidity_afternoon numeric,
+                pressure_afternoon numeric,
+                precipitation_total numeric,
+                wind_max_speed numeric,
+                wind_max_direction numeric
+            )
+            server {} options (
+                object 'daily_summary'
+            )"#,
+                stmt.server_name,
+            ),
+            // weather_overview table (1 row from /onecall/overview → AI weather summary)
+            format!(
+                r#"create foreign table if not exists weather_overview (
+                lat numeric,
+                lon numeric,
+                tz text,
+                date text,
+                units text,
+                weather_overview text
+            )
+            server {} options (
+                object 'weather_overview'
             )"#,
                 stmt.server_name,
             ),

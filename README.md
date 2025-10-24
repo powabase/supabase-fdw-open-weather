@@ -80,7 +80,7 @@ CREATE SERVER openweather_server
     fdw_package_url 'https://github.com/powabase/supabase-fdw-open-weather/releases/download/v0.2.0/open_weather_fdw.wasm',
     fdw_package_name 'powabase:supabase-fdw-open-weather',
     fdw_package_version '0.2.0',
-    fdw_package_checksum 'aac5c2b1893b742cf1f919c8e7cae8d0ef8709964228ea368681c0755100c1ee',
+    fdw_package_checksum '8411826e9bedd01f51b5a2c51e6b0ea2f0b20870c90ba9324e76583a2c709bd9',
     api_url 'https://api.openweathermap.org/data/3.0',
     api_key 'your_openweather_api_key_here'
   );
