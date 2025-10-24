@@ -34,8 +34,8 @@ CREATE SERVER openweather_server
   OPTIONS (
     fdw_package_url 'https://github.com/powabase/supabase-fdw-open-weather/releases/download/v0.2.0/open_weather_fdw.wasm',
     fdw_package_name 'powabase:supabase-fdw-open-weather',
-    fdw_package_version '0.2.0',
-    fdw_package_checksum 'aac5c2b1893b742cf1f919c8e7cae8d0ef8709964228ea368681c0755100c1ee',
+    fdw_package_version 'v0.2.0',
+    fdw_package_checksum '25e8f1bd3727470743fa0f79cc7f214291735e5b107653bcf0e2a1f6dbdeec24',
     api_url 'https://api.openweathermap.org/data/3.0',
     api_key 'your_openweather_api_key_here'  -- Replace with your actual API key
   );
@@ -391,8 +391,8 @@ CREATE SERVER openweather_server
   OPTIONS (
     fdw_package_url 'https://github.com/powabase/supabase-fdw-open-weather/releases/download/v0.2.0/open_weather_fdw.wasm',
     fdw_package_name 'powabase:supabase-fdw-open-weather',
-    fdw_package_version '0.2.0',
-    fdw_package_checksum 'aac5c2b1893b742cf1f919c8e7cae8d0ef8709964228ea368681c0755100c1ee',
+    fdw_package_version 'v0.2.0',
+    fdw_package_checksum '25e8f1bd3727470743fa0f79cc7f214291735e5b107653bcf0e2a1f6dbdeec24',
     api_url 'https://api.openweathermap.org/data/3.0',
     api_key 'your_api_key_here'
   );
