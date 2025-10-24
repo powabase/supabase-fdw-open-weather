@@ -1,0 +1,8 @@
+package powabase:supabase-fdw-open-weather@0.2.0;
+
+world open-weather-fdw {
+    import supabase:wrappers/http@0.2.0;
+    import supabase:wrappers/stats@0.2.0;
+    import supabase:wrappers/utils@0.2.0;
+    export supabase:wrappers/routines@0.2.0;
+}

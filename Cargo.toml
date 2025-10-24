@@ -1,0 +1,30 @@
+[package]
+name = "open-weather-fdw"
+version = "0.2.0"
+edition = "2021"
+description = "WASM Foreign Data Wrapper for OpenWeather One Call API 3.0"
+repository = "https://github.com/powabase/supabase-fdw-open-weather"
+license = "Apache-2.0"
+publish = false
+
+[dependencies]
+wit-bindgen-rt = "0.41.0"
+serde_json = { version = "1.0", default-features = false, features = ["alloc"] }
+
+[lib]
+crate-type = ["cdylib"]
+
+[profile.release]
+opt-level = "z"       # Optimize for size ("z" = most aggressive)
+lto = true            # Link-time optimization
+strip = "debuginfo"   # Strip debug info from binary
+codegen-units = 1     # Better optimization, slower compile
+
+[package.metadata.component]
+package = "powabase:supabase-fdw-open-weather"
+
+[package.metadata.component.target]
+path = "wit"
+
+[package.metadata.component.target.dependencies]
+"supabase:wrappers" = { path = "wit/deps/supabase-wrappers" }

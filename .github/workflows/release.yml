@@ -1,0 +1,182 @@
+name: Release WASM FDW
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write  # Required for creating releases
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Checkout code
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Install Rust toolchain (modern approach - replaces actions-rs/toolchain)
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+
+      # Cache cargo registry, git dependencies, and build artifacts
+      # Saves 2-5 minutes on subsequent builds
+      - name: Cache Rust dependencies
+        uses: Swatinem/rust-cache@v2
+        with:
+          shared-key: "wasm-release"
+          cache-on-failure: true
+
+      # Install cargo-component using pre-built binary (faster than cargo install)
+      - name: Install cargo-component
+        uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-component@0.21.1
+
+      # Install wasm-tools for validation
+      - name: Install wasm-tools
+        uses: taiki-e/install-action@v2
+        with:
+          tool: wasm-tools
+
+      # Build optimized WASM binary
+      - name: Build WASM binary
+        run: |
+          echo "Building WASM binary with target: wasm32-unknown-unknown"
+          cargo component build --release --target wasm32-unknown-unknown
+          ls -lh target/wasm32-unknown-unknown/release/open_weather_fdw.wasm
+
+      # Validate WASM structure (CRITICAL: prevent WASI import bugs)
+      - name: Validate WASM structure
+        run: |
+          echo "Validating WASM binary..."
+
+          # Validate WASM is well-formed
+          wasm-tools validate target/wasm32-unknown-unknown/release/open_weather_fdw.wasm
+
+          # CRITICAL: Check for WASI CLI imports (should be ZERO)
+          echo "Checking for WASI CLI imports (expecting: none)..."
+          WASI_CLI_COUNT=$(wasm-tools component wit target/wasm32-unknown-unknown/release/open_weather_fdw.wasm | grep -c "wasi:cli" || echo "0")
+
+          if [ "$WASI_CLI_COUNT" -gt 0 ]; then
+            echo "❌ ERROR: Found $WASI_CLI_COUNT WASI CLI imports!"
+            echo "This means you built with wasm32-wasip1 instead of wasm32-unknown-unknown"
+            echo "Supabase Wrappers doesn't provide WASI CLI interfaces - build will fail"
+            wasm-tools component wit target/wasm32-unknown-unknown/release/open_weather_fdw.wasm | grep wasi:cli
+            exit 1
+          fi
+
+          echo "✅ WASM validation passed - zero WASI CLI imports"
+
+          # Show imports for verification
+          echo "WASM imports:"
+          wasm-tools component wit target/wasm32-unknown-unknown/release/open_weather_fdw.wasm | head -15
+
+      # Check binary size
+      - name: Check binary size
+        id: size
+        run: |
+          SIZE=$(stat -c%s target/wasm32-unknown-unknown/release/open_weather_fdw.wasm 2>/dev/null || stat -f%z target/wasm32-unknown-unknown/release/open_weather_fdw.wasm)
+          SIZE_KB=$((SIZE / 1024))
+          echo "size_kb=$SIZE_KB" >> $GITHUB_OUTPUT
+          echo "Binary size: ${SIZE_KB} KB"
+
+          if [ $SIZE_KB -gt 160 ]; then
+            echo "⚠️  WARNING: Binary size ($SIZE_KB KB) is larger than expected"
+            echo "Expected: ~143 KB. Check build optimizations in Cargo.toml"
+          else
+            echo "✅ Binary size within expected range"
+          fi
+
+      # Calculate SHA256 checksum
+      - name: Calculate SHA256 checksum
+        id: checksum
+        run: |
+          cd target/wasm32-unknown-unknown/release
+
+          # Calculate checksum (cross-platform)
+          if command -v sha256sum > /dev/null; then
+            CHECKSUM=$(sha256sum open_weather_fdw.wasm | awk '{print $1}')
+          else
+            CHECKSUM=$(shasum -a 256 open_weather_fdw.wasm | awk '{print $1}')
+          fi
+
+          echo "checksum=$CHECKSUM" >> $GITHUB_OUTPUT
+          echo "$CHECKSUM  open_weather_fdw.wasm" > open_weather_fdw.wasm.sha256
+
+          echo "SHA256 checksum: $CHECKSUM"
+
+          # Also create checksums.txt for compatibility
+          echo "SHA256 Checksums" > checksums.txt
+          echo "================" >> checksums.txt
+          echo "" >> checksums.txt
+          echo "$CHECKSUM  open_weather_fdw.wasm" >> checksums.txt
+
+      # Get version from tag
+      - name: Get version from tag
+        id: version
+        run: |
+          VERSION=${GITHUB_REF#refs/tags/}
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Release version: $VERSION"
+
+      # Create GitHub Release
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            target/wasm32-unknown-unknown/release/open_weather_fdw.wasm
+            target/wasm32-unknown-unknown/release/open_weather_fdw.wasm.sha256
+            target/wasm32-unknown-unknown/release/checksums.txt
+          generate_release_notes: true
+          body: |
+            ## OpenWeather WASM FDW ${{ steps.version.outputs.version }}
+
+            **Binary:** ${{ steps.size.outputs.size_kb }} KB | **SHA256:** `${{ steps.checksum.outputs.checksum }}`
+
+            ### Endpoints
+
+            8 production-ready endpoints: **current_weather**, **minutely_forecast**, **hourly_forecast**, **daily_forecast**, **weather_alerts**, **historical_weather**, **daily_summary**, **weather_overview** (101 columns total)
+
+            ---
+
+            ### Quick Start
+
+            ```sql
+            -- Create foreign server
+            CREATE SERVER openweather_server
+              FOREIGN DATA WRAPPER wasm_wrapper
+              OPTIONS (
+                fdw_package_url 'https://github.com/powabase/supabase-fdw-open-weather/releases/download/${{ steps.version.outputs.version }}/open_weather_fdw.wasm',
+                fdw_package_name 'powabase:supabase-fdw-open-weather',
+                fdw_package_version '${{ steps.version.outputs.version }}',
+                fdw_package_checksum '${{ steps.checksum.outputs.checksum }}',
+                api_url 'https://api.openweathermap.org/data/3.0',
+                api_key 'your_openweather_api_key_here'
+              );
+            ```
+
+            **📖 Full Setup:** See [QUICKSTART.md](https://github.com/powabase/supabase-fdw-open-weather/blob/main/QUICKSTART.md) for complete installation instructions.
+
+            **🔑 API Key:** Get your free OpenWeather API key at https://openweathermap.org/api/one-call-3
+
+            ---
+
+            ### Documentation
+
+            - **[README](https://github.com/powabase/supabase-fdw-open-weather/blob/main/README.md)** - Project overview
+            - **[QUICKSTART](https://github.com/powabase/supabase-fdw-open-weather/blob/main/QUICKSTART.md)** - 3-minute setup guide
+            - **[CLAUDE](https://github.com/powabase/supabase-fdw-open-weather/blob/main/CLAUDE.md)** - Development guide
+            - **[Endpoints](https://github.com/powabase/supabase-fdw-open-weather/blob/main/docs/endpoints/)** - Endpoint documentation
+            - **[Deployment Guide](https://github.com/powabase/supabase-fdw-open-weather/blob/main/docs/guides/DEPLOYMENT_GUIDE.md)** - Production deployment
+            - **[Troubleshooting](https://github.com/powabase/supabase-fdw-open-weather/blob/main/docs/guides/TROUBLESHOOTING.md)** - Common issues
+
+            ---
+
+            **Built with:** Rust 1.90+, cargo-component 0.21.1, wasm32-unknown-unknown | **Validated:** Zero WASI CLI imports ✅
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
