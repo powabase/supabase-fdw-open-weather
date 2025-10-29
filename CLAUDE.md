@@ -10,12 +10,13 @@ This wrapper follows the WASM FDW architecture required for hosted Supabase inst
 
 ## Project Status
 
-**✅ v0.3.1 - Production Ready**
+**✅ v0.3.2 - Production Ready**
 
-- **Current Version:** v0.3.1 (100% database schema standards compliance + parameter transformation)
+- **Current Version:** v0.3.2 (100% database schema standards compliance + parameter transformation + Vault support)
 - **Repository Initialized:** October 24, 2025
 - **Standards Refactoring:** October 29, 2025 (v0.3.0)
 - **Parameter Transformation:** October 29, 2025 (v0.3.1)
+- **Vault Support:** October 29, 2025 (v0.3.2)
 - **Endpoints:** 8 of 8 implemented (100% complete)
 - **Binary Size:** 147 KB (under 150 KB target)
 - **Standards Compliance:** 100%
@@ -330,16 +331,19 @@ LIMIT 5;
 5. **Verify API key** (check OpenWeather dashboard)
 6. **Review logs** in Supabase dashboard
 
-### v0.3.0 Release Checklist
+### v0.3.2 Release Checklist
 
 - [x] All 8 endpoints implemented and standards-compliant
-- [x] Version updated in Cargo.toml, wit/world.wit, CLAUDE.md
+- [x] Vault support implemented with dual-mode secret retrieval
+- [x] Version updated in Cargo.toml, wit/world.wit, CLAUDE.md, README.md
+- [x] Deprecation warnings added for plain text api_key
+- [x] Documentation updated with Vault security section in README.md
 - [ ] Built with `--release --target wasm32-unknown-unknown`
 - [ ] Verified zero WASI CLI imports
 - [ ] Binary size < 150 KB
-- [ ] Tested locally with all implemented endpoints
-- [ ] MIGRATION.md created with column mapping
-- [ ] Documentation updated (endpoint docs, README, QUICKSTART)
+- [ ] Tested locally with Vault mode (api_key_id)
+- [ ] Tested locally with plain text mode (api_key) - verify deprecation warning
+- [ ] Tested error handling (neither option provided, invalid vault ID)
 - [ ] SHA256 checksum calculated
 - [ ] GitHub release created with notes
 

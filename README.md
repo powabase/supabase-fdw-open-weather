@@ -131,18 +131,73 @@ cargo component build --release --target wasm32-unknown-unknown
 **Deploy:** See [QUICKSTART.md](QUICKSTART.md) for SQL setup.
 
 ```sql
--- Example SQL setup
+-- Example SQL setup (using Vault for security - recommended)
 CREATE SERVER openweather_server
   FOREIGN DATA WRAPPER wasm_wrapper
   OPTIONS (
-    fdw_package_url 'https://github.com/powabase/supabase-fdw-open-weather/releases/download/v0.3.1/open_weather_fdw.wasm',
+    fdw_package_url 'https://github.com/powabase/supabase-fdw-open-weather/releases/download/v0.3.2/open_weather_fdw.wasm',
     fdw_package_name 'powabase:supabase-fdw-open-weather',
-    fdw_package_version 'v0.3.1',
-    fdw_package_checksum '0abb03a28bce499c1fdeedd0b64c461b226a907c3bcfc6542eb6d36e951f9eee',
+    fdw_package_version 'v0.3.2',
+    fdw_package_checksum 'TBD_AFTER_BUILD',
     api_url 'https://api.openweathermap.org/data/3.0',
-    api_key 'your_openweather_api_key_here'
+    api_key_id 'your_vault_secret_uuid_here'  -- Recommended: Use Vault (see Security section below)
+    -- api_key 'your_api_key'  -- Deprecated: Plain text (backward compatible)
   );
 ```
+
+## Security: Using Vault for API Keys (Recommended)
+
+**🔒 Supabase Vault** provides secure secret storage for production environments. Instead of storing API keys in plain text, store them in Vault and reference them by ID.
+
+### Setup Vault Secret
+
+```sql
+-- 1. Insert your OpenWeather API key into Vault (do this once)
+INSERT INTO vault.secrets (name, secret)
+VALUES (
+  'openweather_api_key',
+  'your_actual_openweather_api_key_here'
+)
+RETURNING id;  -- Save this UUID for the next step
+```
+
+### Create Server with Vault Reference (Recommended)
+
+```sql
+-- 2. Create server using api_key_id (Vault UUID)
+CREATE SERVER openweather_server
+  FOREIGN DATA WRAPPER wasm_wrapper
+  OPTIONS (
+    fdw_package_url 'https://github.com/powabase/supabase-fdw-open-weather/releases/download/v0.3.2/open_weather_fdw.wasm',
+    fdw_package_name 'powabase:supabase-fdw-open-weather',
+    fdw_package_version 'v0.3.2',
+    fdw_package_checksum 'TBD_AFTER_BUILD',
+    api_url 'https://api.openweathermap.org/data/3.0',
+    api_key_id '2d2c2f51-e4f7-4c89-a5e2-1f6e89f3dc4a'  -- Use your Vault UUID here
+  );
+```
+
+### Plain Text API Key (Deprecated)
+
+**⚠️ Deprecated:** Plain text `api_key` is still supported for backward compatibility but will show deprecation warnings:
+
+```sql
+-- Deprecated: Using plain text api_key (not recommended)
+CREATE SERVER openweather_server
+  FOREIGN DATA WRAPPER wasm_wrapper
+  OPTIONS (
+    fdw_package_url 'https://github.com/powabase/supabase-fdw-open-weather/releases/download/v0.3.2/open_weather_fdw.wasm',
+    fdw_package_name 'powabase:supabase-fdw-open-weather',
+    fdw_package_version 'v0.3.2',
+    fdw_package_checksum 'TBD_AFTER_BUILD',
+    api_url 'https://api.openweathermap.org/data/3.0',
+    api_key 'your_openweather_api_key_here'  -- ⚠️ Deprecated: Migrate to api_key_id
+  );
+```
+
+**Migration Guide:** See [VAULT_MIGRATION_GUIDE.md](VAULT_MIGRATION_GUIDE.md) for detailed migration steps.
+
+**Documentation:** [Supabase Vault Guide](https://supabase.com/docs/guides/database/vault)
 
 ## Architecture
 

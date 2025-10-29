@@ -1933,11 +1933,22 @@ impl Guest for OpenWeatherFdwImpl {
             None => "https://api.openweathermap.org/data/3.0".to_string(),
         };
 
-        // Get API key (required) - framework handles api_key_id vault resolution automatically
-        instance.api_key = opts
-            .get("api_key")
-            .ok_or("api_key is required in server options")?
-            .clone();
+        // Get API key using Vault (recommended) or plain text (deprecated)
+        instance.api_key = if let Some(vault_id) = opts.get("api_key_id") {
+            // Vault reference - secure method (RECOMMENDED)
+            utils::get_vault_secret(&vault_id)
+                .ok_or("Failed to retrieve API key from Vault. Ensure the secret exists and is accessible.")?
+        } else if let Some(plain_key) = opts.get("api_key") {
+            // Plain text - deprecated but supported for backward compatibility
+            utils::report_warning(
+                "Using plain text 'api_key' is deprecated for security reasons. \
+                 Please migrate to 'api_key_id' with Vault. \
+                 See: https://supabase.com/docs/guides/database/vault"
+            );
+            plain_key.clone()
+        } else {
+            return Err("Either 'api_key' or 'api_key_id' must be provided in server options".to_string());
+        };
 
         // Set up HTTP headers
         instance.headers.push((
