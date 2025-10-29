@@ -1,4 +1,4 @@
-package powabase:supabase-fdw-open-weather@0.2.0;
+package powabase:supabase-fdw-open-weather@0.3.0;
 
 world open-weather-fdw {
     import supabase:wrappers/http@0.2.0;

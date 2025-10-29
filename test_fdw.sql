@@ -15,8 +15,8 @@ CREATE SERVER IF NOT EXISTS openweather_server
   OPTIONS (
     fdw_package_url 'http://host.docker.internal:8000/open_weather_fdw.wasm',
     fdw_package_name 'powabase:supabase-fdw-open-weather',
-    fdw_package_version 'v0.2.0',
-    fdw_package_checksum '25e8f1bd3727470743fa0f79cc7f214291735e5b107653bcf0e2a1f6dbdeec24',
+    fdw_package_version 'v0.3.1',
+    fdw_package_checksum '0abb03a28bce499c1fdeedd0b64c461b226a907c3bcfc6542eb6d36e951f9eee',  -- See README.md for latest version
     api_url 'https://api.openweathermap.org/data/3.0',
     api_key 'your_openweather_api_key_here'  -- Get free key: https://openweathermap.org/api/one-call-3
   );
@@ -28,166 +28,166 @@ CREATE SCHEMA IF NOT EXISTS fdw_open_weather;
 
 -- Table 1: current_weather (1 row)
 CREATE FOREIGN TABLE IF NOT EXISTS fdw_open_weather.current_weather (
-  lat numeric,
-  lon numeric,
-  timezone text,
-  dt bigint,
-  temp numeric,
-  feels_like numeric,
-  pressure bigint,
-  humidity bigint,
-  dew_point numeric,
-  uvi numeric,
-  clouds bigint,
-  visibility bigint,
-  wind_speed numeric,
-  wind_deg bigint,
-  wind_gust numeric,
-  weather_main text,
+  latitude numeric,
+  longitude numeric,
+  timezone_name text,
+  observation_time timestamp with time zone,
+  temperature_temp numeric,
+  apparent_temperature_temp numeric,
+  pressure_hpa bigint,
+  humidity_pct bigint,
+  dew_point_temp numeric,
+  uv_index numeric,
+  cloud_cover_pct bigint,
+  visibility_m bigint,
+  wind_speed_m_s numeric,
+  wind_direction_deg bigint,
+  wind_gust_speed_m_s numeric,
+  weather_condition text,
   weather_description text,
-  weather_icon text
+  weather_icon_code text
 )
 SERVER openweather_server
 OPTIONS (object 'current_weather');
 
 -- Table 2: minutely_forecast (60 rows)
 CREATE FOREIGN TABLE IF NOT EXISTS fdw_open_weather.minutely_forecast (
-  lat numeric,
-  lon numeric,
-  dt bigint,
-  precipitation numeric
+  latitude numeric,
+  longitude numeric,
+  forecast_time timestamp with time zone,
+  precipitation_mm numeric
 )
 SERVER openweather_server
 OPTIONS (object 'minutely_forecast');
 
 -- Table 3: hourly_forecast (48 rows)
 CREATE FOREIGN TABLE IF NOT EXISTS fdw_open_weather.hourly_forecast (
-  lat numeric,
-  lon numeric,
-  dt bigint,
-  temp numeric,
-  feels_like numeric,
-  pressure bigint,
-  humidity bigint,
-  dew_point numeric,
-  uvi numeric,
-  clouds bigint,
-  visibility bigint,
-  wind_speed numeric,
-  wind_deg bigint,
-  wind_gust numeric,
-  pop numeric,
-  rain_1h numeric,
-  snow_1h numeric,
-  weather_main text,
+  latitude numeric,
+  longitude numeric,
+  forecast_time timestamp with time zone,
+  temperature_temp numeric,
+  apparent_temperature_temp numeric,
+  pressure_hpa bigint,
+  humidity_pct bigint,
+  dew_point_temp numeric,
+  uv_index numeric,
+  cloud_cover_pct bigint,
+  visibility_m bigint,
+  wind_speed_m_s numeric,
+  wind_direction_deg bigint,
+  wind_gust_speed_m_s numeric,
+  precipitation_probability numeric,
+  rain_volume_1h_mm numeric,
+  snow_volume_1h_mm numeric,
+  weather_condition text,
   weather_description text,
-  weather_icon text
+  weather_icon_code text
 )
 SERVER openweather_server
 OPTIONS (object 'hourly_forecast');
 
 -- Table 4: daily_forecast (8 rows)
 CREATE FOREIGN TABLE IF NOT EXISTS fdw_open_weather.daily_forecast (
-  lat numeric,
-  lon numeric,
-  dt bigint,
-  sunrise bigint,
-  sunset bigint,
-  moonrise bigint,
-  moonset bigint,
-  moon_phase numeric,
-  temp_day numeric,
-  temp_min numeric,
-  temp_max numeric,
-  temp_night numeric,
-  temp_eve numeric,
-  temp_morn numeric,
-  feels_like_day numeric,
-  feels_like_night numeric,
-  feels_like_eve numeric,
-  feels_like_morn numeric,
-  pressure bigint,
-  humidity bigint,
-  dew_point numeric,
-  wind_speed numeric,
-  wind_deg bigint,
-  wind_gust numeric,
-  clouds bigint,
-  pop numeric,
-  rain numeric,
-  snow numeric,
-  uvi numeric,
-  weather_main text,
+  latitude numeric,
+  longitude numeric,
+  forecast_date timestamp with time zone,
+  sunrise_time timestamp with time zone,
+  sunset_time timestamp with time zone,
+  moonrise_time timestamp with time zone,
+  moonset_time timestamp with time zone,
+  moon_phase_fraction numeric,
+  temperature_day_temp numeric,
+  temperature_min_temp numeric,
+  temperature_max_temp numeric,
+  temperature_night_temp numeric,
+  temperature_eve_temp numeric,
+  temperature_morn_temp numeric,
+  apparent_temperature_day_temp numeric,
+  apparent_temperature_night_temp numeric,
+  apparent_temperature_eve_temp numeric,
+  apparent_temperature_morn_temp numeric,
+  pressure_hpa bigint,
+  humidity_pct bigint,
+  dew_point_temp numeric,
+  wind_speed_m_s numeric,
+  wind_direction_deg bigint,
+  wind_gust_speed_m_s numeric,
+  cloud_cover_pct bigint,
+  precipitation_probability numeric,
+  precipitation_rain_mm numeric,
+  precipitation_snow_mm numeric,
+  uv_index numeric,
+  weather_condition text,
   weather_description text,
-  weather_icon text
+  weather_icon_code text
 )
 SERVER openweather_server
 OPTIONS (object 'daily_forecast');
 
 -- Table 5: weather_alerts (0-N rows)
 CREATE FOREIGN TABLE IF NOT EXISTS fdw_open_weather.weather_alerts (
-  lat numeric,
-  lon numeric,
-  sender_name text,
-  event text,
-  start bigint,
-  "end" bigint,
-  description text,
-  tags text
+  latitude numeric,
+  longitude numeric,
+  alert_sender_name text,
+  alert_event_type text,
+  alert_start_time timestamp with time zone,
+  alert_end_time timestamp with time zone,
+  alert_description text,
+  alert_tags text
 )
 SERVER openweather_server
 OPTIONS (object 'weather_alerts');
 
 -- Table 6: historical_weather (1 row)
 CREATE FOREIGN TABLE IF NOT EXISTS fdw_open_weather.historical_weather (
-  lat numeric,
-  lon numeric,
-  dt bigint,
-  temp numeric,
-  feels_like numeric,
-  pressure bigint,
-  humidity bigint,
-  dew_point numeric,
-  clouds bigint,
-  visibility bigint,
-  wind_speed numeric,
-  wind_deg bigint,
-  weather_main text,
+  latitude numeric,
+  longitude numeric,
+  observation_time timestamp with time zone,
+  temperature_temp numeric,
+  apparent_temperature_temp numeric,
+  pressure_hpa bigint,
+  humidity_pct bigint,
+  dew_point_temp numeric,
+  cloud_cover_pct bigint,
+  visibility_m bigint,
+  wind_speed_m_s numeric,
+  wind_direction_deg bigint,
+  weather_condition text,
   weather_description text,
-  weather_icon text
+  weather_icon_code text
 )
 SERVER openweather_server
 OPTIONS (object 'historical_weather');
 
 -- Table 7: daily_summary (1 row)
 CREATE FOREIGN TABLE IF NOT EXISTS fdw_open_weather.daily_summary (
-  lat numeric,
-  lon numeric,
-  tz text,
-  date text,
+  latitude numeric,
+  longitude numeric,
+  timezone_offset text,
+  summary_date text,
   units text,
-  temp_min numeric,
-  temp_max numeric,
-  temp_morning numeric,
-  temp_afternoon numeric,
-  temp_evening numeric,
-  temp_night numeric,
-  cloud_cover_afternoon numeric,
-  humidity_afternoon numeric,
-  pressure_afternoon numeric,
-  precipitation_total numeric,
-  wind_max_speed numeric,
-  wind_max_direction numeric
+  temperature_min_temp numeric,
+  temperature_max_temp numeric,
+  temperature_morning_temp numeric,
+  temperature_afternoon_temp numeric,
+  temperature_evening_temp numeric,
+  temperature_night_temp numeric,
+  cloud_cover_afternoon_pct numeric,
+  humidity_afternoon_pct numeric,
+  pressure_afternoon_hpa numeric,
+  precipitation_total_mm numeric,
+  wind_max_speed_m_s numeric,
+  wind_max_direction_deg numeric
 )
 SERVER openweather_server
 OPTIONS (object 'daily_summary');
 
 -- Table 8: weather_overview (1 row)
 CREATE FOREIGN TABLE IF NOT EXISTS fdw_open_weather.weather_overview (
-  lat numeric,
-  lon numeric,
-  tz text,
-  date text,
+  latitude numeric,
+  longitude numeric,
+  timezone_offset text,
+  overview_date text,
   units text,
   weather_overview text
 )
@@ -203,24 +203,24 @@ OPTIONS (object 'weather_overview');
 \echo 'Testing current_weather (1 row expected)'
 \echo '========================================='
 SELECT
-  timezone,
-  TO_TIMESTAMP(dt) as time,
-  temp as temp_celsius,
-  weather_main,
+  timezone_name,
+  observation_time,
+  temperature_temp,
+  weather_condition,
   weather_description
 FROM fdw_open_weather.current_weather
-WHERE lat = 52.52 AND lon = 13.405;
+WHERE latitude = 52.52 AND longitude = 13.405;
 
 \echo ''
 \echo '================================================='
 \echo 'Testing minutely_forecast (up to 60 rows expected)'
 \echo '================================================='
 SELECT
-  TO_TIMESTAMP(dt) as time,
-  precipitation
+  forecast_time,
+  precipitation_mm
 FROM fdw_open_weather.minutely_forecast
-WHERE lat = 52.52 AND lon = 13.405
-ORDER BY dt
+WHERE latitude = 52.52 AND longitude = 13.405
+ORDER BY forecast_time
 LIMIT 5;
 
 \echo ''
@@ -228,13 +228,13 @@ LIMIT 5;
 \echo 'Testing hourly_forecast (48 rows expected)'
 \echo '=============================================='
 SELECT
-  TO_TIMESTAMP(dt) as time,
-  temp as temp_celsius,
-  weather_main,
-  pop as precipitation_probability
+  forecast_time,
+  temperature_temp,
+  weather_condition,
+  precipitation_probability
 FROM fdw_open_weather.hourly_forecast
-WHERE lat = 52.52 AND lon = 13.405
-ORDER BY dt
+WHERE latitude = 52.52 AND longitude = 13.405
+ORDER BY forecast_time
 LIMIT 5;
 
 \echo ''
@@ -242,14 +242,14 @@ LIMIT 5;
 \echo 'Testing daily_forecast (8 rows expected)'
 \echo '============================================'
 SELECT
-  TO_TIMESTAMP(dt) as date,
-  temp_min,
-  temp_max,
-  weather_main,
-  pop as precipitation_probability
+  forecast_date,
+  temperature_min_temp,
+  temperature_max_temp,
+  weather_condition,
+  precipitation_probability
 FROM fdw_open_weather.daily_forecast
-WHERE lat = 52.52 AND lon = 13.405
-ORDER BY dt
+WHERE latitude = 52.52 AND longitude = 13.405
+ORDER BY forecast_date
 LIMIT 5;
 
 \echo ''
@@ -257,26 +257,27 @@ LIMIT 5;
 \echo 'Testing weather_alerts (0-N rows expected)'
 \echo '================================================'
 SELECT
-  event,
-  TO_TIMESTAMP(start) as start_time,
-  TO_TIMESTAMP("end") as end_time,
-  description
+  alert_event_type,
+  alert_start_time,
+  alert_end_time,
+  alert_description
 FROM fdw_open_weather.weather_alerts
-WHERE lat = 52.52 AND lon = 13.405
+WHERE latitude = 52.52 AND longitude = 13.405
 LIMIT 5;
 
 \echo ''
 \echo '======================================================='
 \echo 'Testing historical_weather (1 row expected)'
-\echo 'Using timestamp: 2024-01-01 00:00:00 UTC (1704067200)'
+\echo 'Using timestamp: 2024-01-01 00:00:00 UTC'
 \echo '======================================================='
 SELECT
-  TO_TIMESTAMP(dt) as time,
-  temp as temp_celsius,
-  weather_main,
+  observation_time,
+  temperature_temp,
+  weather_condition,
   weather_description
 FROM fdw_open_weather.historical_weather
-WHERE lat = 52.52 AND lon = 13.405 AND dt = 1704067200;
+WHERE latitude = 52.52 AND longitude = 13.405
+  AND observation_time = '2024-01-01 00:00:00+00';
 
 \echo ''
 \echo '============================================'
@@ -284,14 +285,15 @@ WHERE lat = 52.52 AND lon = 13.405 AND dt = 1704067200;
 \echo 'Using date: 2024-01-15'
 \echo '============================================'
 SELECT
-  date,
-  temp_min,
-  temp_max,
-  temp_afternoon,
-  precipitation_total,
-  wind_max_speed
+  summary_date,
+  temperature_min_temp,
+  temperature_max_temp,
+  temperature_afternoon_temp,
+  precipitation_total_mm,
+  wind_max_speed_m_s
 FROM fdw_open_weather.daily_summary
-WHERE lat = 52.52 AND lon = 13.405 AND date = '2024-01-15';
+WHERE latitude = 52.52 AND longitude = 13.405
+  AND summary_date = '2024-01-15';
 
 \echo ''
 \echo '============================================'
@@ -299,10 +301,10 @@ WHERE lat = 52.52 AND lon = 13.405 AND date = '2024-01-15';
 \echo 'Using today or custom date'
 \echo '============================================'
 SELECT
-  date,
+  overview_date,
   LEFT(weather_overview, 100) || '...' as overview_preview
 FROM fdw_open_weather.weather_overview
-WHERE lat = 52.52 AND lon = 13.405;
+WHERE latitude = 52.52 AND longitude = 13.405;
 
 \echo ''
 \echo '========================================='

@@ -1,5 +1,7 @@
 # OpenWeather WASM FDW
 
+[![Version](https://img.shields.io/badge/version-v0.3.1-blue)](https://github.com/powabase/supabase-fdw-open-weather/releases/tag/v0.3.1)
+
 WebAssembly Foreign Data Wrapper for PostgreSQL enabling SQL queries against the OpenWeather One Call API 3.0.
 
 ## Overview
@@ -8,7 +10,7 @@ This wrapper allows you to query comprehensive weather data from [OpenWeather](h
 
 ```sql
 SELECT * FROM fdw_open_weather.current_weather
-WHERE lat = 52.52 AND lon = 13.405;
+WHERE latitude = 52.52 AND longitude = 13.405;
 ```
 
 A standalone WASM FDW that can be used with any Supabase project.
@@ -17,9 +19,9 @@ A standalone WASM FDW that can be used with any Supabase project.
 
 ## Status
 
-**✅ Production Ready - v0.2.0**
+**✅ Production Ready - v0.3.1**
 
-All 8 endpoints implemented and tested! Ready for deployment.
+All 8 endpoints implemented with 100% database schema standards compliance. Ready for production deployment.
 
 ## Features
 
@@ -30,8 +32,22 @@ All 8 endpoints implemented and tested! Ready for deployment.
 - ✅ **Historical Data** - 46+ years of weather history
 - ✅ **Daily Aggregations** - Statistical weather summaries
 - ✅ **AI Summaries** - Human-readable weather overviews
-- ✅ **Optimized Binary** - 143 KB (under 150 KB target)
+- ✅ **Optimized Binary** - 147 KB (under 150 KB target)
 - ✅ **Fast Response** - Sub-2-second query execution
+- ✅ **Standards Compliant** - 100% database schema design standards compliance
+
+## Release Information
+
+| Attribute | Value |
+|-----------|-------|
+| **Version** | v0.3.1 |
+| **Release Date** | October 29, 2025 |
+| **Binary Size** | 147 KB |
+| **SHA256 Checksum** | `0abb03a28bce499c1fdeedd0b64c461b226a907c3bcfc6542eb6d36e951f9eee` |
+| **Standards Compliance** | 100% (Database Schema Design Standards) |
+| **WASI CLI Imports** | 0 |
+
+See [CHANGELOG.md](CHANGELOG.md) for version history and [MIGRATION.md](MIGRATION.md) for upgrade guides.
 
 ## Endpoints
 
@@ -47,6 +63,48 @@ All 8 endpoints implemented and tested! Ready for deployment.
 | **weather_overview** | /onecall/overview | 1 | 6 | ✅ v0.2.0 |
 
 **Total:** 101 columns across 8 foreign tables
+
+## Quick Examples
+
+All endpoints use standard SQL with `latitude`/`longitude` parameters:
+
+```sql
+-- Current weather conditions
+SELECT * FROM fdw_open_weather.current_weather
+WHERE latitude = 52.52 AND longitude = 13.405;
+
+-- Next hour minute-by-minute precipitation
+SELECT * FROM fdw_open_weather.minutely_forecast
+WHERE latitude = 52.52 AND longitude = 13.405;
+
+-- 48-hour forecast
+SELECT * FROM fdw_open_weather.hourly_forecast
+WHERE latitude = 52.52 AND longitude = 13.405;
+
+-- 8-day forecast
+SELECT * FROM fdw_open_weather.daily_forecast
+WHERE latitude = 52.52 AND longitude = 13.405;
+
+-- Active weather alerts
+SELECT * FROM fdw_open_weather.weather_alerts
+WHERE latitude = 52.52 AND longitude = 13.405;
+
+-- Historical weather (with native TIMESTAMPTZ)
+SELECT * FROM fdw_open_weather.historical_weather
+WHERE latitude = 52.52 AND longitude = 13.405
+  AND observation_time = '2024-01-01 00:00:00+00';
+
+-- Daily aggregated statistics
+SELECT * FROM fdw_open_weather.daily_summary
+WHERE latitude = 52.52 AND longitude = 13.405
+  AND summary_date = '2024-01-15';
+
+-- AI-generated weather overview
+SELECT * FROM fdw_open_weather.weather_overview
+WHERE latitude = 52.52 AND longitude = 13.405;
+```
+
+See [SQL Examples](docs/reference/SQL_EXAMPLES.md) for advanced queries (joins, intervals, aggregations).
 
 ## Quick Start
 
@@ -77,10 +135,10 @@ cargo component build --release --target wasm32-unknown-unknown
 CREATE SERVER openweather_server
   FOREIGN DATA WRAPPER wasm_wrapper
   OPTIONS (
-    fdw_package_url 'https://github.com/powabase/supabase-fdw-open-weather/releases/download/v0.2.0/open_weather_fdw.wasm',
+    fdw_package_url 'https://github.com/powabase/supabase-fdw-open-weather/releases/download/v0.3.1/open_weather_fdw.wasm',
     fdw_package_name 'powabase:supabase-fdw-open-weather',
-    fdw_package_version 'v0.2.0',
-    fdw_package_checksum '25e8f1bd3727470743fa0f79cc7f214291735e5b107653bcf0e2a1f6dbdeec24',
+    fdw_package_version 'v0.3.1',
+    fdw_package_checksum '0abb03a28bce499c1fdeedd0b64c461b226a907c3bcfc6542eb6d36e951f9eee',
     api_url 'https://api.openweathermap.org/data/3.0',
     api_key 'your_openweather_api_key_here'
   );
@@ -92,7 +150,7 @@ CREATE SERVER openweather_server
 ┌─────────────────────────────────────────────────────────┐
 │                    SQL Query                             │
 │  SELECT * FROM fdw_open_weather.current_weather           │
-│  WHERE lat = 52.52 AND lon = 13.405                     │
+│  WHERE latitude = 52.52 AND longitude = 13.405          │
 └──────────────────────┬──────────────────────────────────┘
                        │
                        ▼
@@ -104,7 +162,7 @@ CREATE SERVER openweather_server
                        ▼
 ┌─────────────────────────────────────────────────────────┐
 │            WASM FDW Wrapper (This Project)               │
-│  1. Extracts WHERE clause: lat = 52.52, lon = 13.405   │
+│  1. Extracts WHERE: latitude=52.52, longitude=13.405    │
 │  2. Builds API request with API key                     │
 │  3. Executes HTTP GET to OpenWeather                    │
 │  4. Parses JSON response                                │
@@ -140,7 +198,7 @@ Hosted Supabase instances cannot install native PostgreSQL extensions. WASM FDW 
 
 **Development:**
 - **[CLAUDE.md](CLAUDE.md)** - AI assistant development guide
-- **[Backend Integration](https://github.com/powabase/powabase-backend)** - How this integrates with powabase
+- **[Deployment Guide](docs/guides/DEPLOYMENT_GUIDE.md)** - Production deployment best practices
 
 ### Project Structure
 
@@ -191,11 +249,21 @@ Contributions are welcome! Please:
 
 Apache 2.0 (matches Supabase Wrappers framework)
 
+## Integration
+
+This FDW works with any Supabase project. To integrate:
+
+1. Deploy your Supabase project (local or hosted)
+2. Upload the WASM binary to a public URL (GitHub Releases recommended)
+3. Run the setup SQL (see [QUICKSTART.md](QUICKSTART.md))
+4. Import the foreign schema into your database
+
+For production deployment best practices, see the [Deployment Guide](docs/guides/DEPLOYMENT_GUIDE.md).
+
 ## Related Projects
 
 - [Supabase Wrappers](https://github.com/supabase/wrappers) - WASM FDW framework
 - [OpenWeather API](https://openweathermap.org/api) - Weather data provider
-- [Powabase Backend](https://github.com/powabase/powabase-backend) - Integration target
 - [Energy Charts FDW](https://github.com/powabase/supabase-fdw-energy-charts) - Reference implementation
 
 ## Support
@@ -205,18 +273,4 @@ Apache 2.0 (matches Supabase Wrappers framework)
 - **OpenWeather API:** https://openweathermap.org/api/one-call-3
 - **Supabase WASM FDW:** https://supabase.com/blog/postgres-foreign-data-wrappers-with-wasm
 
-## Changelog
-
-### v0.2.0 (October 24, 2025)
-- ✅ Added `daily_summary` endpoint - Daily aggregated weather statistics
-- ✅ Added `weather_overview` endpoint - AI-generated weather summaries
-- ✅ Complete test coverage for all 8 endpoints
-- ✅ Comprehensive documentation (82+ KB of endpoint docs)
-- ✅ Binary size: 143 KB (optimized)
-
-### v0.1.0 (October 24, 2025)
-- ✅ Initial release with 6 core endpoints
-- ✅ Current weather, forecasts (minutely/hourly/daily), alerts, historical data
-- ✅ Full WASM FDW implementation
-- ✅ Zero WASI CLI imports
-- ✅ Production-ready binary
+For version history and changes, see [CHANGELOG.md](CHANGELOG.md).

@@ -10,15 +10,16 @@ This wrapper follows the WASM FDW architecture required for hosted Supabase inst
 
 ## Project Status
 
-**✅ v0.2.0 - Production Ready**
+**✅ v0.3.1 - Production Ready**
 
-- **Current Version:** v0.2.0 (all 8 endpoints implemented and tested)
+- **Current Version:** v0.3.1 (100% database schema standards compliance + parameter transformation)
 - **Repository Initialized:** October 24, 2025
-- **Implementation Completed:** October 24, 2025
+- **Standards Refactoring:** October 29, 2025 (v0.3.0)
+- **Parameter Transformation:** October 29, 2025 (v0.3.1)
 - **Endpoints:** 8 of 8 implemented (100% complete)
-- **Binary Size:** 143 KB (under 150 KB target)
+- **Binary Size:** 147 KB (under 150 KB target)
+- **Standards Compliance:** 100%
 - **Reference Implementation:** [supabase-fdw-energy-charts](https://github.com/powabase/supabase-fdw-energy-charts)
-- **Backend Integration:** [powabase-backend](https://github.com/powabase/powabase-backend)
 
 ## Technology Stack
 
@@ -29,33 +30,30 @@ This wrapper follows the WASM FDW architecture required for hosted Supabase inst
 - **API:** OpenWeather One Call API 3.0
 - **Deployment:** GitHub releases with WASM binaries
 
-## Implemented Endpoints (v0.2.0)
+## Implemented Endpoints (v0.3.0)
 
-All 8 endpoints from OpenWeather One Call API 3.0 are now implemented:
+All 8 endpoints from OpenWeather One Call API 3.0 are implemented with full standards compliance:
 
 | Endpoint | API Path | Parameters | Rows | Columns | Status |
 |----------|----------|------------|------|---------|--------|
-| **current_weather** | /onecall | lat, lon, units?, lang? | 1 | 18 | ✅ v0.1.0 |
-| **minutely_forecast** | /onecall | lat, lon, units?, lang? | 60 | 4 | ✅ v0.1.0 |
-| **hourly_forecast** | /onecall | lat, lon, units?, lang? | 48 | 19 | ✅ v0.1.0 |
-| **daily_forecast** | /onecall | lat, lon, units?, lang? | 8 | 32 | ✅ v0.1.0 |
-| **weather_alerts** | /onecall | lat, lon, units?, lang? | 0-N | 8 | ✅ v0.1.0 |
-| **historical_weather** | /onecall/timemachine | lat, lon, dt, units?, lang? | 1 | 15 | ✅ v0.1.0 |
-| **daily_summary** | /onecall/day_summary | lat, lon, date, tz?, units?, lang? | 1 | 17 | ✅ v0.2.0 |
-| **weather_overview** | /onecall/overview | lat, lon, date?, units?, lang? | 1 | 6 | ✅ v0.2.0 |
+| **current_weather** | /onecall | latitude, longitude, units?, lang? | 1 | 18 | ✅ v0.3.0 |
+| **minutely_forecast** | /onecall | latitude, longitude, units?, lang? | 60 | 4 | ✅ v0.3.0 |
+| **hourly_forecast** | /onecall | latitude, longitude, units?, lang? | 48 | 19 | ✅ v0.3.0 |
+| **daily_forecast** | /onecall | latitude, longitude, units?, lang? | 8 | 32 | ✅ v0.3.0 |
+| **weather_alerts** | /onecall | latitude, longitude, units?, lang? | 0-N | 8 | ✅ v0.3.0 |
+| **historical_weather** | /onecall/timemachine | latitude, longitude, observation_time, units?, lang? | 1 | 15 | ✅ v0.3.1 |
+| **daily_summary** | /onecall/day_summary | latitude, longitude, summary_date, timezone_offset?, units?, lang? | 1 | 17 | ✅ v0.3.1 |
+| **weather_overview** | /onecall/overview | latitude, longitude, overview_date?, units?, lang? | 1 | 6 | ✅ v0.3.1 |
 
-**Total:** 101 columns across 8 foreign tables
+**Total:** 101 columns across 8 foreign tables (all standards-compliant)
 
 ## API Reference
-
-**Backend Configuration:**
-- See: `/Users/cf/Documents/GitHub/powabase/powabase-backend/supabase/seed/14_openweather_api.sql`
-- This file contains complete parameter schemas, validation rules, and examples
 
 **OpenWeather Documentation:**
 - One Call API 3.0: https://openweathermap.org/api/one-call-3
 - API Key: Required (free tier: 1,000 calls/day)
 - Base URL: https://api.openweathermap.org/data/3.0
+- Complete parameter schemas and validation rules are documented in this repository
 
 ## Quick Reference
 
@@ -147,17 +145,51 @@ let value = json_obj["field"];  // Don't do this!
 OpenWeather requires specific parameters for each endpoint. Extract from WHERE clause:
 
 ```rust
-// Example: Extract lat/lon from WHERE clause
+// Example: Extract latitude/longitude from WHERE clause
 let quals = ctx.get_quals();
-let lat = extract_numeric_qual(&quals, "lat")?;
-let lon = extract_numeric_qual(&quals, "lon")?;
+let latitude = extract_numeric_qual(&quals, "latitude")?;
+let longitude = extract_numeric_qual(&quals, "longitude")?;
 
 // Build URL with parameters
 let url = format!(
     "{}/onecall?lat={}&lon={}&appid={}",
-    base_url, lat, lon, api_key
+    base_url, latitude, longitude, api_key
 );
 ```
+
+#### 4. Parameter Transformation (v0.3.1)
+
+The FDW abstracts API-specific parameters using semantic column names:
+
+**Pattern:** User queries with SQL-standard columns → FDW transforms to API parameters
+
+**Examples:**
+
+| Endpoint | User Column | API Parameter | Transformation |
+|----------|-------------|---------------|----------------|
+| historical_weather | `observation_time` (TIMESTAMPTZ) | `dt` (Unix seconds) | µs ÷ 1,000,000 |
+| daily_summary | `summary_date` (TEXT) | `date` (TEXT) | Pass-through |
+| weather_overview | `overview_date` (TEXT) | `date` (TEXT) | Pass-through |
+
+**Benefits:**
+- Native PostgreSQL temporal operations (intervals, date arithmetic)
+- Consistent with database schema design standards
+- Users don't need API knowledge
+- Enables cross-source joins with consistent column names
+
+**Implementation Pattern:**
+```rust
+// Extract semantic column from WHERE clause
+let observation_time = extract_qual_timestamptz(&quals, "observation_time")?;
+
+// Transform to API parameter (Unix timestamp)
+let dt = observation_time / 1_000_000;  // µs → seconds
+
+// Build API URL with transformed parameter
+let url = format!("{}/onecall/timemachine?dt={}&...", base_url, dt);
+```
+
+See [Parameter Transformation Guide](docs/guides/PARAMETER_TRANSFORMATION.md) for details.
 
 ## Top 3 Pitfalls to Avoid (from energy-charts)
 
@@ -185,7 +217,7 @@ let url = format!(
 
 Recommend implementing **current_and_forecasts** first:
 - Most commonly used endpoint
-- Clear parameter schema (lat, lon required)
+- Clear parameter schema (latitude, longitude required)
 - Well-documented response format
 - Can test immediately
 
@@ -203,9 +235,9 @@ OpenWeather returns nested JSON. Need to flatten to SQL rows:
 ### Phase 3: Parameter Handling
 
 Map WHERE clause to API parameters:
-- Required: lat, lon (always)
+- Required: latitude, longitude (always)
 - Optional: units (standard/metric/imperial), lang, exclude
-- Endpoint-specific: dt (historical), date (daily), etc.
+- Endpoint-specific: observation_time (historical), summary_date/overview_date (daily summaries), etc.
 
 ### Phase 4: Testing Strategy
 
@@ -252,8 +284,8 @@ CREATE SCHEMA IF NOT EXISTS fdw_open_weather;
 -- Create foreign table (schema TBD during implementation)
 CREATE FOREIGN TABLE fdw_open_weather.current_weather (
   -- TODO: Define schema based on OpenWeather response
-  lat numeric,
-  lon numeric
+  latitude numeric,
+  longitude numeric
   -- ... more columns
 )
 SERVER openweather_server
@@ -261,7 +293,7 @@ OPTIONS (object 'current_and_forecasts');
 
 -- Test query
 SELECT * FROM fdw_open_weather.current_weather
-WHERE lat = 52.52 AND lon = 13.405
+WHERE latitude = 52.52 AND longitude = 13.405
 LIMIT 5;
 ```
 
@@ -269,7 +301,6 @@ LIMIT 5;
 
 **Energy Charts FDW:**
 - Repository: [supabase-fdw-energy-charts](https://github.com/powabase/supabase-fdw-energy-charts)
-- Local path: `/Users/cf/Documents/GitHub/powabase/powabase-fdw-energy-charts`
 - Status: Production-ready (v0.5.0)
 - Use as reference for:
   - Project structure
@@ -299,14 +330,15 @@ LIMIT 5;
 5. **Verify API key** (check OpenWeather dashboard)
 6. **Review logs** in Supabase dashboard
 
-### Before Releasing v0.1.0
+### v0.3.0 Release Checklist
 
-- [ ] At least one endpoint fully implemented
-- [ ] Version updated in Cargo.toml, wit/world.wit, CLAUDE.md
+- [x] All 8 endpoints implemented and standards-compliant
+- [x] Version updated in Cargo.toml, wit/world.wit, CLAUDE.md
 - [ ] Built with `--release --target wasm32-unknown-unknown`
 - [ ] Verified zero WASI CLI imports
 - [ ] Binary size < 150 KB
 - [ ] Tested locally with all implemented endpoints
+- [ ] MIGRATION.md created with column mapping
 - [ ] Documentation updated (endpoint docs, README, QUICKSTART)
 - [ ] SHA256 checksum calculated
 - [ ] GitHub release created with notes
@@ -317,7 +349,6 @@ LIMIT 5;
 - **OpenWeather API:** https://openweathermap.org/api/one-call-3
 - **Supabase WASM FDW:** https://fdw.dev
 - **Reference:** Energy Charts FDW source code
-- **Backend Integration:** powabase-backend repository
 
 ## Critical Implementation Notes
 

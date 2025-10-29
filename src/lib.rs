@@ -124,148 +124,148 @@ enum EndpointData {
 
     // /onecall → current_weather (1 row)
     CurrentWeather {
-        lat: f64,
-        lon: f64,
-        timezone: String,
-        dt: i64,
-        temp: f64,
-        feels_like: f64,
-        pressure: i64,
-        humidity: i64,
-        dew_point: f64,
-        uvi: f64,
-        clouds: i64,
-        visibility: i64,
-        wind_speed: f64,
-        wind_deg: i64,
-        wind_gust: Option<f64>,
-        weather_main: String,
+        latitude: f64,
+        longitude: f64,
+        timezone_name: String,
+        observation_time: i64, // Unix seconds (convert to TIMESTAMPTZ in output)
+        temperature_temp: f64,
+        apparent_temperature_temp: f64,
+        pressure_hpa: i64,
+        humidity_pct: i64,
+        dew_point_temp: f64,
+        uv_index: f64,
+        cloud_cover_pct: i64,
+        visibility_m: i64,
+        wind_speed_m_s: f64,
+        wind_direction_deg: i64,
+        wind_gust_speed_m_s: Option<f64>,
+        weather_condition: String,
         weather_description: String,
-        weather_icon: String,
+        weather_icon_code: String,
     },
 
     // /onecall → minutely (60 rows)
     MinutelyForecast {
-        lat: f64,
-        lon: f64,
-        timestamps: Vec<i64>,
-        precipitation: Vec<f64>,
+        latitude: f64,
+        longitude: f64,
+        forecast_time: Vec<i64>, // Unix seconds (convert to TIMESTAMPTZ in output)
+        precipitation_mm: Vec<f64>,
     },
 
     // /onecall → hourly (48 rows)
     HourlyForecast {
-        lat: f64,
-        lon: f64,
-        timestamps: Vec<i64>,
-        temps: Vec<f64>,
-        feels_like: Vec<f64>,
-        pressure: Vec<i64>,
-        humidity: Vec<i64>,
-        dew_point: Vec<f64>,
-        uvi: Vec<f64>,
-        clouds: Vec<i64>,
-        visibility: Vec<i64>,
-        wind_speed: Vec<f64>,
-        wind_deg: Vec<i64>,
-        wind_gust: Vec<Option<f64>>,
-        pop: Vec<f64>,             // Probability of precipitation
-        rain_1h: Vec<Option<f64>>, // Rain volume (optional)
-        snow_1h: Vec<Option<f64>>, // Snow volume (optional)
-        weather_main: Vec<String>,
+        latitude: f64,
+        longitude: f64,
+        forecast_time: Vec<i64>, // Unix seconds (convert to TIMESTAMPTZ in output)
+        temperature_temp: Vec<f64>,
+        apparent_temperature_temp: Vec<f64>,
+        pressure_hpa: Vec<i64>,
+        humidity_pct: Vec<i64>,
+        dew_point_temp: Vec<f64>,
+        uv_index: Vec<f64>,
+        cloud_cover_pct: Vec<i64>,
+        visibility_m: Vec<i64>,
+        wind_speed_m_s: Vec<f64>,
+        wind_direction_deg: Vec<i64>,
+        wind_gust_speed_m_s: Vec<Option<f64>>,
+        precipitation_probability: Vec<f64>,
+        rain_volume_1h_mm: Vec<Option<f64>>,
+        snow_volume_1h_mm: Vec<Option<f64>>,
+        weather_condition: Vec<String>,
         weather_description: Vec<String>,
-        weather_icon: Vec<String>,
+        weather_icon_code: Vec<String>,
     },
 
     // /onecall → daily (8 rows)
     DailyForecast {
-        lat: f64,
-        lon: f64,
-        timestamps: Vec<i64>,
-        sunrise: Vec<i64>,
-        sunset: Vec<i64>,
-        moonrise: Vec<i64>,
-        moonset: Vec<i64>,
-        moon_phase: Vec<f64>,
-        temp_day: Vec<f64>,
-        temp_min: Vec<f64>,
-        temp_max: Vec<f64>,
-        temp_night: Vec<f64>,
-        temp_eve: Vec<f64>,
-        temp_morn: Vec<f64>,
-        feels_like_day: Vec<f64>,
-        feels_like_night: Vec<f64>,
-        feels_like_eve: Vec<f64>,
-        feels_like_morn: Vec<f64>,
-        pressure: Vec<i64>,
-        humidity: Vec<i64>,
-        dew_point: Vec<f64>,
-        wind_speed: Vec<f64>,
-        wind_deg: Vec<i64>,
-        wind_gust: Vec<Option<f64>>,
-        clouds: Vec<i64>,
-        pop: Vec<f64>,
-        rain: Vec<Option<f64>>,
-        snow: Vec<Option<f64>>,
-        uvi: Vec<f64>,
-        weather_main: Vec<String>,
+        latitude: f64,
+        longitude: f64,
+        forecast_date: Vec<i64>, // Unix seconds (convert to TIMESTAMPTZ in output)
+        sunrise_time: Vec<i64>,  // Unix seconds (convert to TIMESTAMPTZ in output)
+        sunset_time: Vec<i64>,   // Unix seconds (convert to TIMESTAMPTZ in output)
+        moonrise_time: Vec<i64>, // Unix seconds (convert to TIMESTAMPTZ in output)
+        moonset_time: Vec<i64>,  // Unix seconds (convert to TIMESTAMPTZ in output)
+        moon_phase_fraction: Vec<f64>,
+        temperature_day_temp: Vec<f64>,
+        temperature_min_temp: Vec<f64>,
+        temperature_max_temp: Vec<f64>,
+        temperature_night_temp: Vec<f64>,
+        temperature_evening_temp: Vec<f64>,
+        temperature_morning_temp: Vec<f64>,
+        apparent_temperature_day_temp: Vec<f64>,
+        apparent_temperature_night_temp: Vec<f64>,
+        apparent_temperature_evening_temp: Vec<f64>,
+        apparent_temperature_morning_temp: Vec<f64>,
+        pressure_hpa: Vec<i64>,
+        humidity_pct: Vec<i64>,
+        dew_point_temp: Vec<f64>,
+        wind_speed_m_s: Vec<f64>,
+        wind_direction_deg: Vec<i64>,
+        wind_gust_speed_m_s: Vec<Option<f64>>,
+        cloud_cover_pct: Vec<i64>,
+        precipitation_probability: Vec<f64>,
+        rain_volume_mm: Vec<Option<f64>>,
+        snow_volume_mm: Vec<Option<f64>>,
+        uv_index: Vec<f64>,
+        weather_condition: Vec<String>,
         weather_description: Vec<String>,
-        weather_icon: Vec<String>,
+        weather_icon_code: Vec<String>,
     },
 
     // /onecall → alerts (0-N rows)
     WeatherAlerts {
-        lat: f64,
-        lon: f64,
+        latitude: f64,
+        longitude: f64,
         alerts: Vec<AlertRow>,
     },
 
     // /onecall/timemachine (1 row)
     HistoricalWeather {
-        lat: f64,
-        lon: f64,
-        dt: i64,
-        temp: f64,
-        feels_like: f64,
-        pressure: i64,
-        humidity: i64,
-        dew_point: f64,
-        clouds: i64,
-        visibility: i64,
-        wind_speed: f64,
-        wind_deg: i64,
-        weather_main: String,
+        latitude: f64,
+        longitude: f64,
+        observation_time: i64, // Unix seconds (convert to TIMESTAMPTZ in output)
+        temperature_temp: f64,
+        apparent_temperature_temp: f64,
+        pressure_hpa: i64,
+        humidity_pct: i64,
+        dew_point_temp: f64,
+        cloud_cover_pct: i64,
+        visibility_m: i64,
+        wind_speed_m_s: f64,
+        wind_direction_deg: i64,
+        weather_condition: String,
         weather_description: String,
-        weather_icon: String,
+        weather_icon_code: String,
     },
 
     // /onecall/day_summary (1 row)
     DailySummary {
-        lat: f64,
-        lon: f64,
-        tz: String,
-        date: String,
-        units: String,
-        temp_min: f64,
-        temp_max: f64,
-        temp_morning: f64,
-        temp_afternoon: f64,
-        temp_evening: f64,
-        temp_night: f64,
-        cloud_cover_afternoon: f64,
-        humidity_afternoon: f64,
-        pressure_afternoon: f64,
-        precipitation_total: f64,
-        wind_max_speed: f64,
-        wind_max_direction: f64,
+        latitude: f64,
+        longitude: f64,
+        timezone_offset: String,
+        summary_date: String,
+        unit_system: String,
+        temperature_min_temp: f64,
+        temperature_max_temp: f64,
+        temperature_morning_temp: f64,
+        temperature_afternoon_temp: f64,
+        temperature_evening_temp: f64,
+        temperature_night_temp: f64,
+        cloud_cover_afternoon_pct: f64,
+        humidity_afternoon_pct: f64,
+        pressure_afternoon_hpa: f64,
+        precipitation_total_mm: f64,
+        wind_max_speed_m_s: f64,
+        wind_max_direction_deg: f64,
     },
 
     // /onecall/overview (1 row)
     WeatherOverview {
-        lat: f64,
-        lon: f64,
-        tz: String,
-        date: String,
-        units: String,
+        latitude: f64,
+        longitude: f64,
+        timezone_offset: String,
+        overview_date: String,
+        unit_system: String,
         weather_overview: String,
     },
 }
@@ -273,12 +273,12 @@ enum EndpointData {
 /// Helper struct for weather alerts
 #[derive(Debug, Clone)]
 struct AlertRow {
-    sender_name: String,
-    event: String,
-    start: i64,
-    end: i64,
-    description: String,
-    tags: Vec<String>,
+    alert_sender_name: String,
+    alert_event_type: String,
+    alert_start_time: i64, // Unix seconds (convert to TIMESTAMPTZ in output)
+    alert_end_time: i64,   // Unix seconds (convert to TIMESTAMPTZ in output)
+    alert_description: String,
+    alert_tags: Vec<String>,
 }
 
 impl EndpointData {
@@ -287,9 +287,9 @@ impl EndpointData {
         match self {
             EndpointData::None => 0,
             EndpointData::CurrentWeather { .. } => 1,
-            EndpointData::MinutelyForecast { timestamps, .. } => timestamps.len(),
-            EndpointData::HourlyForecast { timestamps, .. } => timestamps.len(),
-            EndpointData::DailyForecast { timestamps, .. } => timestamps.len(),
+            EndpointData::MinutelyForecast { forecast_time, .. } => forecast_time.len(),
+            EndpointData::HourlyForecast { forecast_time, .. } => forecast_time.len(),
+            EndpointData::DailyForecast { forecast_date, .. } => forecast_date.len(),
             EndpointData::WeatherAlerts { alerts, .. } => alerts.len(),
             EndpointData::HistoricalWeather { .. } => 1,
             EndpointData::DailySummary { .. } => 1,
@@ -318,13 +318,13 @@ struct OpenWeatherFdw {
     /// Endpoint-specific cached data
     data: EndpointData,
     /// Query parameters from WHERE clause
-    lat: f64,
-    lon: f64,
-    units: String,        // "metric", "imperial", or "standard"
-    lang: String,         // "en", "de", "es", etc.
-    dt: Option<i64>,      // Unix timestamp (historical_weather)
-    date: Option<String>, // YYYY-MM-DD date (daily_summary, weather_overview)
-    tz: Option<String>,   // Timezone offset +/-HHMM (daily_summary)
+    latitude: f64,
+    longitude: f64,
+    units: String,                   // "metric", "imperial", or "standard"
+    lang: String,                    // "en", "de", "es", etc.
+    dt: Option<i64>,                 // Unix timestamp (historical_weather)
+    date: Option<String>,            // YYYY-MM-DD date (daily_summary, weather_overview)
+    timezone_offset: Option<String>, // Timezone offset +/-HHMM (daily_summary)
     /// Current row index for iteration
     current_row: usize,
 }
@@ -378,36 +378,50 @@ impl OpenWeatherFdw {
             })
     }
 
+    /// Extract TIMESTAMPTZ parameter from WHERE clause (returns microseconds)
+    fn extract_qual_timestamptz(
+        quals: &[bindings::supabase::wrappers::types::Qual],
+        field: &str,
+    ) -> Option<i64> {
+        quals
+            .iter()
+            .find(|q| q.field() == field && q.operator() == "=")
+            .and_then(|q| match q.value() {
+                Value::Cell(Cell::Timestamptz(ts)) => Some(ts),
+                _ => None,
+            })
+    }
+
     /// Extract and validate location from WHERE clause
     fn extract_and_validate_location(
         quals: &[bindings::supabase::wrappers::types::Qual],
     ) -> Result<(f64, f64), FdwError> {
-        let lat = Self::extract_qual_numeric(quals, "lat").ok_or(
-            "WHERE clause must include 'lat' (latitude) between -90 and 90. \
-             Example: WHERE lat = 52.52 AND lon = 13.405",
+        let latitude = Self::extract_qual_numeric(quals, "latitude").ok_or(
+            "WHERE clause must include 'latitude' between -90 and 90. \
+             Example: WHERE latitude = 52.52 AND longitude = 13.405",
         )?;
 
-        let lon = Self::extract_qual_numeric(quals, "lon").ok_or(
-            "WHERE clause must include 'lon' (longitude) between -180 and 180. \
-             Example: WHERE lat = 52.52 AND lon = 13.405",
+        let longitude = Self::extract_qual_numeric(quals, "longitude").ok_or(
+            "WHERE clause must include 'longitude' between -180 and 180. \
+             Example: WHERE latitude = 52.52 AND longitude = 13.405",
         )?;
 
         // Validate ranges
-        if !(-90.0..=90.0).contains(&lat) {
+        if !(-90.0..=90.0).contains(&latitude) {
             return Err(format!(
-                "lat must be between -90 and 90, got {}. Example: WHERE lat = 52.52",
-                lat
+                "latitude must be between -90 and 90, got {}. Example: WHERE latitude = 52.52",
+                latitude
             ));
         }
 
-        if !(-180.0..=180.0).contains(&lon) {
+        if !(-180.0..=180.0).contains(&longitude) {
             return Err(format!(
-                "lon must be between -180 and 180, got {}. Example: WHERE lon = 13.405",
-                lon
+                "longitude must be between -180 and 180, got {}. Example: WHERE longitude = 13.405",
+                longitude
             ));
         }
 
-        Ok((lat, lon))
+        Ok((latitude, longitude))
     }
 
     /// Create HTTP request for OpenWeather API based on endpoint type
@@ -429,21 +443,21 @@ impl OpenWeatherFdw {
                     "{}{}?lat={}&lon={}&appid={}&units={}&lang={}",
                     self.base_url,
                     api_path,
-                    self.lat,
-                    self.lon,
+                    self.latitude,
+                    self.longitude,
                     self.api_key,
                     self.units,
                     self.lang
                 )
             }
             EndpointType::HistoricalWeather => {
-                let dt = self.dt.ok_or("dt parameter required for historical_weather. Example: WHERE lat = 52.52 AND lon = 13.405 AND dt = 1609459200")?;
+                let dt = self.dt.ok_or("observation_time parameter required for historical_weather. Example: WHERE latitude = 52.52 AND longitude = 13.405 AND observation_time = '2024-01-01 00:00:00+00'")?;
                 format!(
                     "{}{}?lat={}&lon={}&dt={}&appid={}&units={}&lang={}",
                     self.base_url,
                     api_path,
-                    self.lat,
-                    self.lon,
+                    self.latitude,
+                    self.longitude,
                     dt,
                     self.api_key,
                     self.units,
@@ -451,20 +465,20 @@ impl OpenWeatherFdw {
                 )
             }
             EndpointType::DailySummary => {
-                let date = self.date.as_ref().ok_or("date parameter required for daily_summary (YYYY-MM-DD format). Example: WHERE lat = 52.52 AND lon = 13.405 AND date = '2024-01-15'")?;
+                let date = self.date.as_ref().ok_or("summary_date parameter required for daily_summary (YYYY-MM-DD format). Example: WHERE latitude = 52.52 AND longitude = 13.405 AND summary_date = '2024-01-15'")?;
                 let mut url = format!(
                     "{}{}?lat={}&lon={}&date={}&appid={}&units={}&lang={}",
                     self.base_url,
                     api_path,
-                    self.lat,
-                    self.lon,
+                    self.latitude,
+                    self.longitude,
                     date,
                     self.api_key,
                     self.units,
                     self.lang
                 );
-                // Add optional tz parameter
-                if let Some(ref tz) = self.tz {
+                // Add optional timezone_offset parameter
+                if let Some(ref tz) = self.timezone_offset {
                     url.push_str(&format!("&tz={}", tz));
                 }
                 url
@@ -474,8 +488,8 @@ impl OpenWeatherFdw {
                     "{}{}?lat={}&lon={}&appid={}&units={}&lang={}",
                     self.base_url,
                     api_path,
-                    self.lat,
-                    self.lon,
+                    self.latitude,
+                    self.longitude,
                     self.api_key,
                     self.units,
                     self.lang
@@ -588,28 +602,28 @@ impl OpenWeatherFdw {
 
         // Store data
         self.data = EndpointData::CurrentWeather {
-            lat: self.lat,
-            lon: self.lon,
-            timezone: resp_json
+            latitude: self.latitude,
+            longitude: self.longitude,
+            timezone_name: resp_json
                 .get("timezone")
                 .and_then(|v| v.as_str())
                 .unwrap_or("UTC")
                 .to_string(),
-            dt,
-            temp,
-            feels_like,
-            pressure,
-            humidity,
-            dew_point,
-            uvi,
-            clouds,
-            visibility,
-            wind_speed,
-            wind_deg,
-            wind_gust,
-            weather_main,
+            observation_time: dt,
+            temperature_temp: temp,
+            apparent_temperature_temp: feels_like,
+            pressure_hpa: pressure,
+            humidity_pct: humidity,
+            dew_point_temp: dew_point,
+            uv_index: uvi,
+            cloud_cover_pct: clouds,
+            visibility_m: visibility,
+            wind_speed_m_s: wind_speed,
+            wind_direction_deg: wind_deg,
+            wind_gust_speed_m_s: wind_gust,
+            weather_condition: weather_main,
             weather_description,
-            weather_icon,
+            weather_icon_code: weather_icon,
         };
 
         Ok(())
@@ -638,10 +652,10 @@ impl OpenWeatherFdw {
         }
 
         self.data = EndpointData::MinutelyForecast {
-            lat: self.lat,
-            lon: self.lon,
-            timestamps,
-            precipitation,
+            latitude: self.latitude,
+            longitude: self.longitude,
+            forecast_time: timestamps,
+            precipitation_mm: precipitation,
         };
 
         utils::report_info(&format!(
@@ -787,26 +801,26 @@ impl OpenWeatherFdw {
         }
 
         self.data = EndpointData::HourlyForecast {
-            lat: self.lat,
-            lon: self.lon,
-            timestamps,
-            temps,
-            feels_like,
-            pressure,
-            humidity,
-            dew_point,
-            uvi,
-            clouds,
-            visibility,
-            wind_speed,
-            wind_deg,
-            wind_gust,
-            pop,
-            rain_1h,
-            snow_1h,
-            weather_main,
+            latitude: self.latitude,
+            longitude: self.longitude,
+            forecast_time: timestamps,
+            temperature_temp: temps,
+            apparent_temperature_temp: feels_like,
+            pressure_hpa: pressure,
+            humidity_pct: humidity,
+            dew_point_temp: dew_point,
+            uv_index: uvi,
+            cloud_cover_pct: clouds,
+            visibility_m: visibility,
+            wind_speed_m_s: wind_speed,
+            wind_direction_deg: wind_deg,
+            wind_gust_speed_m_s: wind_gust,
+            precipitation_probability: pop,
+            rain_volume_1h_mm: rain_1h,
+            snow_volume_1h_mm: snow_1h,
+            weather_condition: weather_main,
             weather_description,
-            weather_icon,
+            weather_icon_code: weather_icon,
         };
 
         utils::report_info(&format!(
@@ -1036,38 +1050,38 @@ impl OpenWeatherFdw {
         }
 
         self.data = EndpointData::DailyForecast {
-            lat: self.lat,
-            lon: self.lon,
-            timestamps,
-            sunrise,
-            sunset,
-            moonrise,
-            moonset,
-            moon_phase,
-            temp_day,
-            temp_min,
-            temp_max,
-            temp_night,
-            temp_eve,
-            temp_morn,
-            feels_like_day,
-            feels_like_night,
-            feels_like_eve,
-            feels_like_morn,
-            pressure,
-            humidity,
-            dew_point,
-            wind_speed,
-            wind_deg,
-            wind_gust,
-            clouds,
-            pop,
-            rain,
-            snow,
-            uvi,
-            weather_main,
+            latitude: self.latitude,
+            longitude: self.longitude,
+            forecast_date: timestamps,
+            sunrise_time: sunrise,
+            sunset_time: sunset,
+            moonrise_time: moonrise,
+            moonset_time: moonset,
+            moon_phase_fraction: moon_phase,
+            temperature_day_temp: temp_day,
+            temperature_min_temp: temp_min,
+            temperature_max_temp: temp_max,
+            temperature_night_temp: temp_night,
+            temperature_evening_temp: temp_eve,
+            temperature_morning_temp: temp_morn,
+            apparent_temperature_day_temp: feels_like_day,
+            apparent_temperature_night_temp: feels_like_night,
+            apparent_temperature_evening_temp: feels_like_eve,
+            apparent_temperature_morning_temp: feels_like_morn,
+            pressure_hpa: pressure,
+            humidity_pct: humidity,
+            dew_point_temp: dew_point,
+            wind_speed_m_s: wind_speed,
+            wind_direction_deg: wind_deg,
+            wind_gust_speed_m_s: wind_gust,
+            cloud_cover_pct: clouds,
+            precipitation_probability: pop,
+            rain_volume_mm: rain,
+            snow_volume_mm: snow,
+            uv_index: uvi,
+            weather_condition: weather_main,
             weather_description,
-            weather_icon,
+            weather_icon_code: weather_icon,
         };
 
         utils::report_info(&format!(
@@ -1086,8 +1100,8 @@ impl OpenWeatherFdw {
             None => {
                 // No alerts - return empty dataset
                 self.data = EndpointData::WeatherAlerts {
-                    lat: self.lat,
-                    lon: self.lon,
+                    latitude: self.latitude,
+                    longitude: self.longitude,
                     alerts: Vec::new(),
                 };
                 utils::report_info("No weather alerts for this location");
@@ -1132,18 +1146,18 @@ impl OpenWeatherFdw {
                 .unwrap_or_default();
 
             alerts.push(AlertRow {
-                sender_name,
-                event,
-                start,
-                end,
-                description,
-                tags,
+                alert_sender_name: sender_name,
+                alert_event_type: event,
+                alert_start_time: start,
+                alert_end_time: end,
+                alert_description: description,
+                alert_tags: tags,
             });
         }
 
         self.data = EndpointData::WeatherAlerts {
-            lat: self.lat,
-            lon: self.lon,
+            latitude: self.latitude,
+            longitude: self.longitude,
             alerts,
         };
 
@@ -1226,21 +1240,21 @@ impl OpenWeatherFdw {
             .to_string();
 
         self.data = EndpointData::HistoricalWeather {
-            lat: self.lat,
-            lon: self.lon,
-            dt,
-            temp,
-            feels_like,
-            pressure,
-            humidity,
-            dew_point,
-            clouds,
-            visibility,
-            wind_speed,
-            wind_deg,
-            weather_main,
+            latitude: self.latitude,
+            longitude: self.longitude,
+            observation_time: dt,
+            temperature_temp: temp,
+            apparent_temperature_temp: feels_like,
+            pressure_hpa: pressure,
+            humidity_pct: humidity,
+            dew_point_temp: dew_point,
+            cloud_cover_pct: clouds,
+            visibility_m: visibility,
+            wind_speed_m_s: wind_speed,
+            wind_direction_deg: wind_deg,
+            weather_condition: weather_main,
             weather_description,
-            weather_icon,
+            weather_icon_code: weather_icon,
         };
 
         utils::report_info("Parsed historical weather data");
@@ -1355,23 +1369,23 @@ impl OpenWeatherFdw {
             .unwrap_or(0.0);
 
         self.data = EndpointData::DailySummary {
-            lat,
-            lon,
-            tz,
-            date,
-            units,
-            temp_min,
-            temp_max,
-            temp_morning,
-            temp_afternoon,
-            temp_evening,
-            temp_night,
-            cloud_cover_afternoon,
-            humidity_afternoon,
-            pressure_afternoon,
-            precipitation_total,
-            wind_max_speed,
-            wind_max_direction,
+            latitude: lat,
+            longitude: lon,
+            timezone_offset: tz,
+            summary_date: date,
+            unit_system: units,
+            temperature_min_temp: temp_min,
+            temperature_max_temp: temp_max,
+            temperature_morning_temp: temp_morning,
+            temperature_afternoon_temp: temp_afternoon,
+            temperature_evening_temp: temp_evening,
+            temperature_night_temp: temp_night,
+            cloud_cover_afternoon_pct: cloud_cover_afternoon,
+            humidity_afternoon_pct: humidity_afternoon,
+            pressure_afternoon_hpa: pressure_afternoon,
+            precipitation_total_mm: precipitation_total,
+            wind_max_speed_m_s: wind_max_speed,
+            wind_max_direction_deg: wind_max_direction,
         };
 
         utils::report_info("Parsed daily summary data");
@@ -1411,11 +1425,11 @@ impl OpenWeatherFdw {
             .to_string();
 
         self.data = EndpointData::WeatherOverview {
-            lat,
-            lon,
-            tz,
-            date,
-            units,
+            latitude: lat,
+            longitude: lon,
+            timezone_offset: tz,
+            overview_date: date,
+            unit_system: units,
             weather_overview,
         };
 
@@ -1437,43 +1451,43 @@ impl OpenWeatherFdw {
         // Map column name to data based on endpoint type
         let cell = match &self.data {
             EndpointData::CurrentWeather {
-                lat,
-                lon,
-                timezone,
-                dt,
-                temp,
-                feels_like,
-                pressure,
-                humidity,
-                dew_point,
-                uvi,
-                clouds,
-                visibility,
-                wind_speed,
-                wind_deg,
-                wind_gust,
-                weather_main,
+                latitude,
+                longitude,
+                timezone_name,
+                observation_time,
+                temperature_temp,
+                apparent_temperature_temp,
+                pressure_hpa,
+                humidity_pct,
+                dew_point_temp,
+                uv_index,
+                cloud_cover_pct,
+                visibility_m,
+                wind_speed_m_s,
+                wind_direction_deg,
+                wind_gust_speed_m_s,
+                weather_condition,
                 weather_description,
-                weather_icon,
+                weather_icon_code,
             } => match tgt_col_name.as_str() {
-                "lat" => Some(Cell::Numeric(*lat)),
-                "lon" => Some(Cell::Numeric(*lon)),
-                "timezone" => Some(Cell::String(timezone.clone())),
-                "dt" => Some(Cell::I64(*dt)),
-                "temp" => Some(Cell::Numeric(*temp)),
-                "feels_like" => Some(Cell::Numeric(*feels_like)),
-                "pressure" => Some(Cell::I64(*pressure)),
-                "humidity" => Some(Cell::I64(*humidity)),
-                "dew_point" => Some(Cell::Numeric(*dew_point)),
-                "uvi" => Some(Cell::Numeric(*uvi)),
-                "clouds" => Some(Cell::I64(*clouds)),
-                "visibility" => Some(Cell::I64(*visibility)),
-                "wind_speed" => Some(Cell::Numeric(*wind_speed)),
-                "wind_deg" => Some(Cell::I64(*wind_deg)),
-                "wind_gust" => wind_gust.map(Cell::Numeric),
-                "weather_main" => Some(Cell::String(weather_main.clone())),
+                "latitude" => Some(Cell::Numeric(*latitude)),
+                "longitude" => Some(Cell::Numeric(*longitude)),
+                "timezone_name" => Some(Cell::String(timezone_name.clone())),
+                "observation_time" => Some(Cell::Timestamptz(observation_time * 1_000_000)),
+                "temperature_temp" => Some(Cell::Numeric(*temperature_temp)),
+                "apparent_temperature_temp" => Some(Cell::Numeric(*apparent_temperature_temp)),
+                "pressure_hpa" => Some(Cell::Numeric(*pressure_hpa as f64)),
+                "humidity_pct" => Some(Cell::Numeric(*humidity_pct as f64)),
+                "dew_point_temp" => Some(Cell::Numeric(*dew_point_temp)),
+                "uv_index" => Some(Cell::Numeric(*uv_index)),
+                "cloud_cover_pct" => Some(Cell::Numeric(*cloud_cover_pct as f64)),
+                "visibility_m" => Some(Cell::Numeric(*visibility_m as f64)),
+                "wind_speed_m_s" => Some(Cell::Numeric(*wind_speed_m_s)),
+                "wind_direction_deg" => Some(Cell::Numeric(*wind_direction_deg as f64)),
+                "wind_gust_speed_m_s" => wind_gust_speed_m_s.map(Cell::Numeric),
+                "weather_condition" => Some(Cell::String(weather_condition.clone())),
                 "weather_description" => Some(Cell::String(weather_description.clone())),
-                "weather_icon" => Some(Cell::String(weather_icon.clone())),
+                "weather_icon_code" => Some(Cell::String(weather_icon_code.clone())),
                 _ => {
                     return Err(format!(
                         "unknown column '{}' for current_weather endpoint",
@@ -1483,15 +1497,17 @@ impl OpenWeatherFdw {
             },
 
             EndpointData::MinutelyForecast {
-                lat,
-                lon,
-                timestamps,
-                precipitation,
+                latitude,
+                longitude,
+                forecast_time,
+                precipitation_mm,
             } => match tgt_col_name.as_str() {
-                "lat" => Some(Cell::Numeric(*lat)),
-                "lon" => Some(Cell::Numeric(*lon)),
-                "dt" => timestamps.get(row_idx).map(|&v| Cell::I64(v)),
-                "precipitation" => precipitation.get(row_idx).map(|&v| Cell::Numeric(v)),
+                "latitude" => Some(Cell::Numeric(*latitude)),
+                "longitude" => Some(Cell::Numeric(*longitude)),
+                "forecast_time" => forecast_time
+                    .get(row_idx)
+                    .map(|&v| Cell::Timestamptz(v * 1_000_000)),
+                "precipitation_mm" => precipitation_mm.get(row_idx).map(|&v| Cell::Numeric(v)),
                 _ => {
                     return Err(format!(
                         "unknown column '{}' for minutely_forecast endpoint",
@@ -1501,49 +1517,69 @@ impl OpenWeatherFdw {
             },
 
             EndpointData::HourlyForecast {
-                lat,
-                lon,
-                timestamps,
-                temps,
-                feels_like,
-                pressure,
-                humidity,
-                dew_point,
-                uvi,
-                clouds,
-                visibility,
-                wind_speed,
-                wind_deg,
-                wind_gust,
-                pop,
-                rain_1h,
-                snow_1h,
-                weather_main,
+                latitude,
+                longitude,
+                forecast_time,
+                temperature_temp,
+                apparent_temperature_temp,
+                pressure_hpa,
+                humidity_pct,
+                dew_point_temp,
+                uv_index,
+                cloud_cover_pct,
+                visibility_m,
+                wind_speed_m_s,
+                wind_direction_deg,
+                wind_gust_speed_m_s,
+                precipitation_probability,
+                rain_volume_1h_mm,
+                snow_volume_1h_mm,
+                weather_condition,
                 weather_description,
-                weather_icon,
+                weather_icon_code,
             } => match tgt_col_name.as_str() {
-                "lat" => Some(Cell::Numeric(*lat)),
-                "lon" => Some(Cell::Numeric(*lon)),
-                "dt" => timestamps.get(row_idx).map(|&v| Cell::I64(v)),
-                "temp" => temps.get(row_idx).map(|&v| Cell::Numeric(v)),
-                "feels_like" => feels_like.get(row_idx).map(|&v| Cell::Numeric(v)),
-                "pressure" => pressure.get(row_idx).map(|&v| Cell::I64(v)),
-                "humidity" => humidity.get(row_idx).map(|&v| Cell::I64(v)),
-                "dew_point" => dew_point.get(row_idx).map(|&v| Cell::Numeric(v)),
-                "uvi" => uvi.get(row_idx).map(|&v| Cell::Numeric(v)),
-                "clouds" => clouds.get(row_idx).map(|&v| Cell::I64(v)),
-                "visibility" => visibility.get(row_idx).map(|&v| Cell::I64(v)),
-                "wind_speed" => wind_speed.get(row_idx).map(|&v| Cell::Numeric(v)),
-                "wind_deg" => wind_deg.get(row_idx).map(|&v| Cell::I64(v)),
-                "wind_gust" => wind_gust.get(row_idx).and_then(|&v| v.map(Cell::Numeric)),
-                "pop" => pop.get(row_idx).map(|&v| Cell::Numeric(v)),
-                "rain_1h" => rain_1h.get(row_idx).and_then(|&v| v.map(Cell::Numeric)),
-                "snow_1h" => snow_1h.get(row_idx).and_then(|&v| v.map(Cell::Numeric)),
-                "weather_main" => weather_main.get(row_idx).map(|v| Cell::String(v.clone())),
+                "latitude" => Some(Cell::Numeric(*latitude)),
+                "longitude" => Some(Cell::Numeric(*longitude)),
+                "forecast_time" => forecast_time
+                    .get(row_idx)
+                    .map(|&v| Cell::Timestamptz(v * 1_000_000)),
+                "temperature_temp" => temperature_temp.get(row_idx).map(|&v| Cell::Numeric(v)),
+                "apparent_temperature_temp" => apparent_temperature_temp
+                    .get(row_idx)
+                    .map(|&v| Cell::Numeric(v)),
+                "pressure_hpa" => pressure_hpa.get(row_idx).map(|&v| Cell::Numeric(v as f64)),
+                "humidity_pct" => humidity_pct.get(row_idx).map(|&v| Cell::Numeric(v as f64)),
+                "dew_point_temp" => dew_point_temp.get(row_idx).map(|&v| Cell::Numeric(v)),
+                "uv_index" => uv_index.get(row_idx).map(|&v| Cell::Numeric(v)),
+                "cloud_cover_pct" => cloud_cover_pct
+                    .get(row_idx)
+                    .map(|&v| Cell::Numeric(v as f64)),
+                "visibility_m" => visibility_m.get(row_idx).map(|&v| Cell::Numeric(v as f64)),
+                "wind_speed_m_s" => wind_speed_m_s.get(row_idx).map(|&v| Cell::Numeric(v)),
+                "wind_direction_deg" => wind_direction_deg
+                    .get(row_idx)
+                    .map(|&v| Cell::Numeric(v as f64)),
+                "wind_gust_speed_m_s" => wind_gust_speed_m_s
+                    .get(row_idx)
+                    .and_then(|&v| v.map(Cell::Numeric)),
+                "precipitation_probability" => precipitation_probability
+                    .get(row_idx)
+                    .map(|&v| Cell::Numeric(v)),
+                "rain_volume_1h_mm" => rain_volume_1h_mm
+                    .get(row_idx)
+                    .and_then(|&v| v.map(Cell::Numeric)),
+                "snow_volume_1h_mm" => snow_volume_1h_mm
+                    .get(row_idx)
+                    .and_then(|&v| v.map(Cell::Numeric)),
+                "weather_condition" => weather_condition
+                    .get(row_idx)
+                    .map(|v| Cell::String(v.clone())),
                 "weather_description" => weather_description
                     .get(row_idx)
                     .map(|v| Cell::String(v.clone())),
-                "weather_icon" => weather_icon.get(row_idx).map(|v| Cell::String(v.clone())),
+                "weather_icon_code" => weather_icon_code
+                    .get(row_idx)
+                    .map(|v| Cell::String(v.clone())),
                 _ => {
                     return Err(format!(
                         "unknown column '{}' for hourly_forecast endpoint",
@@ -1553,73 +1589,121 @@ impl OpenWeatherFdw {
             },
 
             EndpointData::DailyForecast {
-                lat,
-                lon,
-                timestamps,
-                sunrise,
-                sunset,
-                moonrise,
-                moonset,
-                moon_phase,
-                temp_day,
-                temp_min,
-                temp_max,
-                temp_night,
-                temp_eve,
-                temp_morn,
-                feels_like_day,
-                feels_like_night,
-                feels_like_eve,
-                feels_like_morn,
-                pressure,
-                humidity,
-                dew_point,
-                wind_speed,
-                wind_deg,
-                wind_gust,
-                clouds,
-                pop,
-                rain,
-                snow,
-                uvi,
-                weather_main,
+                latitude,
+                longitude,
+                forecast_date,
+                sunrise_time,
+                sunset_time,
+                moonrise_time,
+                moonset_time,
+                moon_phase_fraction,
+                temperature_day_temp,
+                temperature_min_temp,
+                temperature_max_temp,
+                temperature_night_temp,
+                temperature_evening_temp,
+                temperature_morning_temp,
+                apparent_temperature_day_temp,
+                apparent_temperature_night_temp,
+                apparent_temperature_evening_temp,
+                apparent_temperature_morning_temp,
+                pressure_hpa,
+                humidity_pct,
+                dew_point_temp,
+                wind_speed_m_s,
+                wind_direction_deg,
+                wind_gust_speed_m_s,
+                cloud_cover_pct,
+                precipitation_probability,
+                rain_volume_mm,
+                snow_volume_mm,
+                uv_index,
+                weather_condition,
                 weather_description,
-                weather_icon,
+                weather_icon_code,
             } => match tgt_col_name.as_str() {
-                "lat" => Some(Cell::Numeric(*lat)),
-                "lon" => Some(Cell::Numeric(*lon)),
-                "dt" => timestamps.get(row_idx).map(|&v| Cell::I64(v)),
-                "sunrise" => sunrise.get(row_idx).map(|&v| Cell::I64(v)),
-                "sunset" => sunset.get(row_idx).map(|&v| Cell::I64(v)),
-                "moonrise" => moonrise.get(row_idx).map(|&v| Cell::I64(v)),
-                "moonset" => moonset.get(row_idx).map(|&v| Cell::I64(v)),
-                "moon_phase" => moon_phase.get(row_idx).map(|&v| Cell::Numeric(v)),
-                "temp_day" => temp_day.get(row_idx).map(|&v| Cell::Numeric(v)),
-                "temp_min" => temp_min.get(row_idx).map(|&v| Cell::Numeric(v)),
-                "temp_max" => temp_max.get(row_idx).map(|&v| Cell::Numeric(v)),
-                "temp_night" => temp_night.get(row_idx).map(|&v| Cell::Numeric(v)),
-                "temp_eve" => temp_eve.get(row_idx).map(|&v| Cell::Numeric(v)),
-                "temp_morn" => temp_morn.get(row_idx).map(|&v| Cell::Numeric(v)),
-                "feels_like_day" => feels_like_day.get(row_idx).map(|&v| Cell::Numeric(v)),
-                "feels_like_night" => feels_like_night.get(row_idx).map(|&v| Cell::Numeric(v)),
-                "feels_like_eve" => feels_like_eve.get(row_idx).map(|&v| Cell::Numeric(v)),
-                "feels_like_morn" => feels_like_morn.get(row_idx).map(|&v| Cell::Numeric(v)),
-                "pressure" => pressure.get(row_idx).map(|&v| Cell::I64(v)),
-                "humidity" => humidity.get(row_idx).map(|&v| Cell::I64(v)),
-                "dew_point" => dew_point.get(row_idx).map(|&v| Cell::Numeric(v)),
-                "wind_speed" => wind_speed.get(row_idx).map(|&v| Cell::Numeric(v)),
-                "wind_deg" => wind_deg.get(row_idx).map(|&v| Cell::I64(v)),
-                "wind_gust" => wind_gust.get(row_idx).and_then(|&v| v.map(Cell::Numeric)),
-                "clouds" => clouds.get(row_idx).map(|&v| Cell::I64(v)),
-                "pop" => pop.get(row_idx).map(|&v| Cell::Numeric(v)),
-                "rain" => rain.get(row_idx).and_then(|&v| v.map(Cell::Numeric)),
-                "snow" => snow.get(row_idx).and_then(|&v| v.map(Cell::Numeric)),
-                "uvi" => uvi.get(row_idx).map(|&v| Cell::Numeric(v)),
-                "weather_main" => weather_main.get(row_idx).map(|v| Cell::String(v.clone())),
+                "latitude" => Some(Cell::Numeric(*latitude)),
+                "longitude" => Some(Cell::Numeric(*longitude)),
+                "forecast_date" => forecast_date
+                    .get(row_idx)
+                    .map(|&v| Cell::Timestamptz(v * 1_000_000)),
+                "sunrise_time" => sunrise_time
+                    .get(row_idx)
+                    .map(|&v| Cell::Timestamptz(v * 1_000_000)),
+                "sunset_time" => sunset_time
+                    .get(row_idx)
+                    .map(|&v| Cell::Timestamptz(v * 1_000_000)),
+                "moonrise_time" => moonrise_time
+                    .get(row_idx)
+                    .map(|&v| Cell::Timestamptz(v * 1_000_000)),
+                "moonset_time" => moonset_time
+                    .get(row_idx)
+                    .map(|&v| Cell::Timestamptz(v * 1_000_000)),
+                "moon_phase_fraction" => {
+                    moon_phase_fraction.get(row_idx).map(|&v| Cell::Numeric(v))
+                }
+                "temperature_day_temp" => {
+                    temperature_day_temp.get(row_idx).map(|&v| Cell::Numeric(v))
+                }
+                "temperature_min_temp" => {
+                    temperature_min_temp.get(row_idx).map(|&v| Cell::Numeric(v))
+                }
+                "temperature_max_temp" => {
+                    temperature_max_temp.get(row_idx).map(|&v| Cell::Numeric(v))
+                }
+                "temperature_night_temp" => temperature_night_temp
+                    .get(row_idx)
+                    .map(|&v| Cell::Numeric(v)),
+                "temperature_evening_temp" => temperature_evening_temp
+                    .get(row_idx)
+                    .map(|&v| Cell::Numeric(v)),
+                "temperature_morning_temp" => temperature_morning_temp
+                    .get(row_idx)
+                    .map(|&v| Cell::Numeric(v)),
+                "apparent_temperature_day_temp" => apparent_temperature_day_temp
+                    .get(row_idx)
+                    .map(|&v| Cell::Numeric(v)),
+                "apparent_temperature_night_temp" => apparent_temperature_night_temp
+                    .get(row_idx)
+                    .map(|&v| Cell::Numeric(v)),
+                "apparent_temperature_evening_temp" => apparent_temperature_evening_temp
+                    .get(row_idx)
+                    .map(|&v| Cell::Numeric(v)),
+                "apparent_temperature_morning_temp" => apparent_temperature_morning_temp
+                    .get(row_idx)
+                    .map(|&v| Cell::Numeric(v)),
+                "pressure_hpa" => pressure_hpa.get(row_idx).map(|&v| Cell::Numeric(v as f64)),
+                "humidity_pct" => humidity_pct.get(row_idx).map(|&v| Cell::Numeric(v as f64)),
+                "dew_point_temp" => dew_point_temp.get(row_idx).map(|&v| Cell::Numeric(v)),
+                "wind_speed_m_s" => wind_speed_m_s.get(row_idx).map(|&v| Cell::Numeric(v)),
+                "wind_direction_deg" => wind_direction_deg
+                    .get(row_idx)
+                    .map(|&v| Cell::Numeric(v as f64)),
+                "wind_gust_speed_m_s" => wind_gust_speed_m_s
+                    .get(row_idx)
+                    .and_then(|&v| v.map(Cell::Numeric)),
+                "cloud_cover_pct" => cloud_cover_pct
+                    .get(row_idx)
+                    .map(|&v| Cell::Numeric(v as f64)),
+                "precipitation_probability" => precipitation_probability
+                    .get(row_idx)
+                    .map(|&v| Cell::Numeric(v)),
+                "rain_volume_mm" => rain_volume_mm
+                    .get(row_idx)
+                    .and_then(|&v| v.map(Cell::Numeric)),
+                "snow_volume_mm" => snow_volume_mm
+                    .get(row_idx)
+                    .and_then(|&v| v.map(Cell::Numeric)),
+                "uv_index" => uv_index.get(row_idx).map(|&v| Cell::Numeric(v)),
+                "weather_condition" => weather_condition
+                    .get(row_idx)
+                    .map(|v| Cell::String(v.clone())),
                 "weather_description" => weather_description
                     .get(row_idx)
                     .map(|v| Cell::String(v.clone())),
-                "weather_icon" => weather_icon.get(row_idx).map(|v| Cell::String(v.clone())),
+                "weather_icon_code" => weather_icon_code
+                    .get(row_idx)
+                    .map(|v| Cell::String(v.clone())),
                 _ => {
                     return Err(format!(
                         "unknown column '{}' for daily_forecast endpoint",
@@ -1628,19 +1712,25 @@ impl OpenWeatherFdw {
                 }
             },
 
-            EndpointData::WeatherAlerts { lat, lon, alerts } => {
+            EndpointData::WeatherAlerts {
+                latitude,
+                longitude,
+                alerts,
+            } => {
                 let alert = alerts.get(row_idx).ok_or("alert index out of bounds")?;
                 match tgt_col_name.as_str() {
-                    "lat" => Some(Cell::Numeric(*lat)),
-                    "lon" => Some(Cell::Numeric(*lon)),
-                    "sender_name" => Some(Cell::String(alert.sender_name.clone())),
-                    "event" => Some(Cell::String(alert.event.clone())),
-                    "start" => Some(Cell::I64(alert.start)),
-                    "end" => Some(Cell::I64(alert.end)),
-                    "description" => Some(Cell::String(alert.description.clone())),
-                    "tags" => {
+                    "latitude" => Some(Cell::Numeric(*latitude)),
+                    "longitude" => Some(Cell::Numeric(*longitude)),
+                    "alert_sender_name" => Some(Cell::String(alert.alert_sender_name.clone())),
+                    "alert_event_type" => Some(Cell::String(alert.alert_event_type.clone())),
+                    "alert_start_time" => {
+                        Some(Cell::Timestamptz(alert.alert_start_time * 1_000_000))
+                    }
+                    "alert_end_time" => Some(Cell::Timestamptz(alert.alert_end_time * 1_000_000)),
+                    "alert_description" => Some(Cell::String(alert.alert_description.clone())),
+                    "alert_tags" => {
                         // Convert Vec<String> to comma-separated string
-                        Some(Cell::String(alert.tags.join(",")))
+                        Some(Cell::String(alert.alert_tags.join(",")))
                     }
                     _ => {
                         return Err(format!(
@@ -1652,37 +1742,37 @@ impl OpenWeatherFdw {
             }
 
             EndpointData::HistoricalWeather {
-                lat,
-                lon,
-                dt,
-                temp,
-                feels_like,
-                pressure,
-                humidity,
-                dew_point,
-                clouds,
-                visibility,
-                wind_speed,
-                wind_deg,
-                weather_main,
+                latitude,
+                longitude,
+                observation_time,
+                temperature_temp,
+                apparent_temperature_temp,
+                pressure_hpa,
+                humidity_pct,
+                dew_point_temp,
+                cloud_cover_pct,
+                visibility_m,
+                wind_speed_m_s,
+                wind_direction_deg,
+                weather_condition,
                 weather_description,
-                weather_icon,
+                weather_icon_code,
             } => match tgt_col_name.as_str() {
-                "lat" => Some(Cell::Numeric(*lat)),
-                "lon" => Some(Cell::Numeric(*lon)),
-                "dt" => Some(Cell::I64(*dt)),
-                "temp" => Some(Cell::Numeric(*temp)),
-                "feels_like" => Some(Cell::Numeric(*feels_like)),
-                "pressure" => Some(Cell::I64(*pressure)),
-                "humidity" => Some(Cell::I64(*humidity)),
-                "dew_point" => Some(Cell::Numeric(*dew_point)),
-                "clouds" => Some(Cell::I64(*clouds)),
-                "visibility" => Some(Cell::I64(*visibility)),
-                "wind_speed" => Some(Cell::Numeric(*wind_speed)),
-                "wind_deg" => Some(Cell::I64(*wind_deg)),
-                "weather_main" => Some(Cell::String(weather_main.clone())),
+                "latitude" => Some(Cell::Numeric(*latitude)),
+                "longitude" => Some(Cell::Numeric(*longitude)),
+                "observation_time" => Some(Cell::Timestamptz(observation_time * 1_000_000)),
+                "temperature_temp" => Some(Cell::Numeric(*temperature_temp)),
+                "apparent_temperature_temp" => Some(Cell::Numeric(*apparent_temperature_temp)),
+                "pressure_hpa" => Some(Cell::Numeric(*pressure_hpa as f64)),
+                "humidity_pct" => Some(Cell::Numeric(*humidity_pct as f64)),
+                "dew_point_temp" => Some(Cell::Numeric(*dew_point_temp)),
+                "cloud_cover_pct" => Some(Cell::Numeric(*cloud_cover_pct as f64)),
+                "visibility_m" => Some(Cell::Numeric(*visibility_m as f64)),
+                "wind_speed_m_s" => Some(Cell::Numeric(*wind_speed_m_s)),
+                "wind_direction_deg" => Some(Cell::Numeric(*wind_direction_deg as f64)),
+                "weather_condition" => Some(Cell::String(weather_condition.clone())),
                 "weather_description" => Some(Cell::String(weather_description.clone())),
-                "weather_icon" => Some(Cell::String(weather_icon.clone())),
+                "weather_icon_code" => Some(Cell::String(weather_icon_code.clone())),
                 _ => {
                     return Err(format!(
                         "unknown column '{}' for historical_weather endpoint",
@@ -1692,41 +1782,41 @@ impl OpenWeatherFdw {
             },
 
             EndpointData::DailySummary {
-                lat,
-                lon,
-                tz,
-                date,
-                units,
-                temp_min,
-                temp_max,
-                temp_morning,
-                temp_afternoon,
-                temp_evening,
-                temp_night,
-                cloud_cover_afternoon,
-                humidity_afternoon,
-                pressure_afternoon,
-                precipitation_total,
-                wind_max_speed,
-                wind_max_direction,
+                latitude,
+                longitude,
+                timezone_offset,
+                summary_date,
+                unit_system,
+                temperature_min_temp,
+                temperature_max_temp,
+                temperature_morning_temp,
+                temperature_afternoon_temp,
+                temperature_evening_temp,
+                temperature_night_temp,
+                cloud_cover_afternoon_pct,
+                humidity_afternoon_pct,
+                pressure_afternoon_hpa,
+                precipitation_total_mm,
+                wind_max_speed_m_s,
+                wind_max_direction_deg,
             } => match tgt_col_name.as_str() {
-                "lat" => Some(Cell::Numeric(*lat)),
-                "lon" => Some(Cell::Numeric(*lon)),
-                "tz" => Some(Cell::String(tz.clone())),
-                "date" => Some(Cell::String(date.clone())),
-                "units" => Some(Cell::String(units.clone())),
-                "temp_min" => Some(Cell::Numeric(*temp_min)),
-                "temp_max" => Some(Cell::Numeric(*temp_max)),
-                "temp_morning" => Some(Cell::Numeric(*temp_morning)),
-                "temp_afternoon" => Some(Cell::Numeric(*temp_afternoon)),
-                "temp_evening" => Some(Cell::Numeric(*temp_evening)),
-                "temp_night" => Some(Cell::Numeric(*temp_night)),
-                "cloud_cover_afternoon" => Some(Cell::Numeric(*cloud_cover_afternoon)),
-                "humidity_afternoon" => Some(Cell::Numeric(*humidity_afternoon)),
-                "pressure_afternoon" => Some(Cell::Numeric(*pressure_afternoon)),
-                "precipitation_total" => Some(Cell::Numeric(*precipitation_total)),
-                "wind_max_speed" => Some(Cell::Numeric(*wind_max_speed)),
-                "wind_max_direction" => Some(Cell::Numeric(*wind_max_direction)),
+                "latitude" => Some(Cell::Numeric(*latitude)),
+                "longitude" => Some(Cell::Numeric(*longitude)),
+                "timezone_offset" => Some(Cell::String(timezone_offset.clone())),
+                "summary_date" => Some(Cell::String(summary_date.clone())),
+                "unit_system" => Some(Cell::String(unit_system.clone())),
+                "temperature_min_temp" => Some(Cell::Numeric(*temperature_min_temp)),
+                "temperature_max_temp" => Some(Cell::Numeric(*temperature_max_temp)),
+                "temperature_morning_temp" => Some(Cell::Numeric(*temperature_morning_temp)),
+                "temperature_afternoon_temp" => Some(Cell::Numeric(*temperature_afternoon_temp)),
+                "temperature_evening_temp" => Some(Cell::Numeric(*temperature_evening_temp)),
+                "temperature_night_temp" => Some(Cell::Numeric(*temperature_night_temp)),
+                "cloud_cover_afternoon_pct" => Some(Cell::Numeric(*cloud_cover_afternoon_pct)),
+                "humidity_afternoon_pct" => Some(Cell::Numeric(*humidity_afternoon_pct)),
+                "pressure_afternoon_hpa" => Some(Cell::Numeric(*pressure_afternoon_hpa)),
+                "precipitation_total_mm" => Some(Cell::Numeric(*precipitation_total_mm)),
+                "wind_max_speed_m_s" => Some(Cell::Numeric(*wind_max_speed_m_s)),
+                "wind_max_direction_deg" => Some(Cell::Numeric(*wind_max_direction_deg)),
                 _ => {
                     return Err(format!(
                         "unknown column '{}' for daily_summary endpoint",
@@ -1736,18 +1826,18 @@ impl OpenWeatherFdw {
             },
 
             EndpointData::WeatherOverview {
-                lat,
-                lon,
-                tz,
-                date,
-                units,
+                latitude,
+                longitude,
+                timezone_offset,
+                overview_date,
+                unit_system,
                 weather_overview,
             } => match tgt_col_name.as_str() {
-                "lat" => Some(Cell::Numeric(*lat)),
-                "lon" => Some(Cell::Numeric(*lon)),
-                "tz" => Some(Cell::String(tz.clone())),
-                "date" => Some(Cell::String(date.clone())),
-                "units" => Some(Cell::String(units.clone())),
+                "latitude" => Some(Cell::Numeric(*latitude)),
+                "longitude" => Some(Cell::Numeric(*longitude)),
+                "timezone_offset" => Some(Cell::String(timezone_offset.clone())),
+                "overview_date" => Some(Cell::String(overview_date.clone())),
+                "unit_system" => Some(Cell::String(unit_system.clone())),
                 "weather_overview" => Some(Cell::String(weather_overview.clone())),
                 _ => {
                     return Err(format!(
@@ -1773,8 +1863,8 @@ impl OpenWeatherFdw {
 
         // Log request details
         utils::report_info(&format!(
-            "Fetching OpenWeather data for {:?} at lat={}, lon={}",
-            endpoint_type, self.lat, self.lon
+            "Fetching OpenWeather data for {:?} at latitude={}, longitude={}",
+            endpoint_type, self.latitude, self.longitude
         ));
 
         // Create and execute HTTP request
@@ -1882,9 +1972,9 @@ impl Guest for OpenWeatherFdwImpl {
         let quals = ctx.get_quals();
 
         // Extract and validate location (required for all endpoints)
-        let (lat, lon) = OpenWeatherFdw::extract_and_validate_location(&quals)?;
-        instance.lat = lat;
-        instance.lon = lon;
+        let (latitude, longitude) = OpenWeatherFdw::extract_and_validate_location(&quals)?;
+        instance.latitude = latitude;
+        instance.longitude = longitude;
 
         // Extract optional parameters with defaults
         instance.units = OpenWeatherFdw::extract_qual_string(&quals, "units")
@@ -1895,21 +1985,22 @@ impl Guest for OpenWeatherFdwImpl {
         // Extract endpoint-specific parameters
         match endpoint_type {
             EndpointType::HistoricalWeather => {
-                // Try to extract dt as numeric first, then as i64 if that fails
-                let dt_value = OpenWeatherFdw::extract_qual_numeric(&quals, "dt")
-                    .ok_or("WHERE clause must include 'dt' (Unix timestamp) for historical_weather. Example: WHERE lat = 52.52 AND lon = 13.405 AND dt = 1609459200")?;
-                instance.dt = Some(dt_value as i64);
+                // Extract observation_time and convert to Unix seconds for API
+                let observation_time = OpenWeatherFdw::extract_qual_timestamptz(&quals, "observation_time")
+                    .ok_or("WHERE clause must include 'observation_time' for historical_weather. Example: WHERE latitude = 52.52 AND longitude = 13.405 AND observation_time = '2024-01-01 00:00:00+00'")?;
+                instance.dt = Some(observation_time / 1_000_000); // Convert microseconds → seconds for API
             }
             EndpointType::DailySummary => {
-                // Extract required date parameter (YYYY-MM-DD)
-                instance.date = Some(OpenWeatherFdw::extract_qual_string(&quals, "date")
-                    .ok_or("WHERE clause must include 'date' (YYYY-MM-DD format) for daily_summary. Example: WHERE lat = 52.52 AND lon = 13.405 AND date = '2024-01-15'")?);
-                // Extract optional tz parameter (+/-HHMM)
-                instance.tz = OpenWeatherFdw::extract_qual_string(&quals, "tz");
+                // Extract required summary_date parameter (YYYY-MM-DD)
+                instance.date = Some(OpenWeatherFdw::extract_qual_string(&quals, "summary_date")
+                    .ok_or("WHERE clause must include 'summary_date' (YYYY-MM-DD format) for daily_summary. Example: WHERE latitude = 52.52 AND longitude = 13.405 AND summary_date = '2024-01-15'")?);
+                // Extract optional timezone_offset parameter (+/-HHMM)
+                instance.timezone_offset =
+                    OpenWeatherFdw::extract_qual_string(&quals, "timezone_offset");
             }
             EndpointType::WeatherOverview => {
-                // Extract optional date parameter (defaults to today if omitted)
-                instance.date = OpenWeatherFdw::extract_qual_string(&quals, "date");
+                // Extract optional overview_date parameter (defaults to today if omitted)
+                instance.date = OpenWeatherFdw::extract_qual_string(&quals, "overview_date");
             }
             _ => {} // No additional parameters needed for other endpoints
         }
@@ -1982,29 +2073,29 @@ impl Guest for OpenWeatherFdwImpl {
         _ctx: &Context,
         stmt: ImportForeignSchemaStmt,
     ) -> Result<Vec<String>, FdwError> {
-        // Generate schemas for all 8 supported endpoints (v0.2.0)
+        // Generate schemas for all 8 supported endpoints (v0.3.0 - standards compliant)
         let ret = vec![
             // current_weather table (1 row from /onecall → current)
             format!(
                 r#"create foreign table if not exists current_weather (
-                lat numeric,
-                lon numeric,
-                timezone text,
-                dt bigint,
-                temp numeric,
-                feels_like numeric,
-                pressure bigint,
-                humidity bigint,
-                dew_point numeric,
-                uvi numeric,
-                clouds bigint,
-                visibility bigint,
-                wind_speed numeric,
-                wind_deg bigint,
-                wind_gust numeric,
-                weather_main text,
+                latitude numeric,
+                longitude numeric,
+                timezone_name text,
+                observation_time timestamp with time zone,
+                temperature_temp numeric,
+                apparent_temperature_temp numeric,
+                pressure_hpa numeric,
+                humidity_pct numeric,
+                dew_point_temp numeric,
+                uv_index numeric,
+                cloud_cover_pct numeric,
+                visibility_m numeric,
+                wind_speed_m_s numeric,
+                wind_direction_deg numeric,
+                wind_gust_speed_m_s numeric,
+                weather_condition text,
                 weather_description text,
-                weather_icon text
+                weather_icon_code text
             )
             server {} options (
                 object 'current_weather'
@@ -2014,10 +2105,10 @@ impl Guest for OpenWeatherFdwImpl {
             // minutely_forecast table (60 rows from /onecall → minutely[])
             format!(
                 r#"create foreign table if not exists minutely_forecast (
-                lat numeric,
-                lon numeric,
-                dt bigint,
-                precipitation numeric
+                latitude numeric,
+                longitude numeric,
+                forecast_time timestamp with time zone,
+                precipitation_mm numeric
             )
             server {} options (
                 object 'minutely_forecast'
@@ -2027,26 +2118,26 @@ impl Guest for OpenWeatherFdwImpl {
             // hourly_forecast table (48 rows from /onecall → hourly[])
             format!(
                 r#"create foreign table if not exists hourly_forecast (
-                lat numeric,
-                lon numeric,
-                dt bigint,
-                temp numeric,
-                feels_like numeric,
-                pressure bigint,
-                humidity bigint,
-                dew_point numeric,
-                uvi numeric,
-                clouds bigint,
-                visibility bigint,
-                wind_speed numeric,
-                wind_deg bigint,
-                wind_gust numeric,
-                pop numeric,
-                rain_1h numeric,
-                snow_1h numeric,
-                weather_main text,
+                latitude numeric,
+                longitude numeric,
+                forecast_time timestamp with time zone,
+                temperature_temp numeric,
+                apparent_temperature_temp numeric,
+                pressure_hpa numeric,
+                humidity_pct numeric,
+                dew_point_temp numeric,
+                uv_index numeric,
+                cloud_cover_pct numeric,
+                visibility_m numeric,
+                wind_speed_m_s numeric,
+                wind_direction_deg numeric,
+                wind_gust_speed_m_s numeric,
+                precipitation_probability numeric,
+                rain_volume_1h_mm numeric,
+                snow_volume_1h_mm numeric,
+                weather_condition text,
                 weather_description text,
-                weather_icon text
+                weather_icon_code text
             )
             server {} options (
                 object 'hourly_forecast'
@@ -2056,38 +2147,38 @@ impl Guest for OpenWeatherFdwImpl {
             // daily_forecast table (8 rows from /onecall → daily[])
             format!(
                 r#"create foreign table if not exists daily_forecast (
-                lat numeric,
-                lon numeric,
-                dt bigint,
-                sunrise bigint,
-                sunset bigint,
-                moonrise bigint,
-                moonset bigint,
-                moon_phase numeric,
-                temp_day numeric,
-                temp_min numeric,
-                temp_max numeric,
-                temp_night numeric,
-                temp_eve numeric,
-                temp_morn numeric,
-                feels_like_day numeric,
-                feels_like_night numeric,
-                feels_like_eve numeric,
-                feels_like_morn numeric,
-                pressure bigint,
-                humidity bigint,
-                dew_point numeric,
-                wind_speed numeric,
-                wind_deg bigint,
-                wind_gust numeric,
-                clouds bigint,
-                pop numeric,
-                rain numeric,
-                snow numeric,
-                uvi numeric,
-                weather_main text,
+                latitude numeric,
+                longitude numeric,
+                forecast_date timestamp with time zone,
+                sunrise_time timestamp with time zone,
+                sunset_time timestamp with time zone,
+                moonrise_time timestamp with time zone,
+                moonset_time timestamp with time zone,
+                moon_phase_fraction numeric,
+                temperature_day_temp numeric,
+                temperature_min_temp numeric,
+                temperature_max_temp numeric,
+                temperature_night_temp numeric,
+                temperature_evening_temp numeric,
+                temperature_morning_temp numeric,
+                apparent_temperature_day_temp numeric,
+                apparent_temperature_night_temp numeric,
+                apparent_temperature_evening_temp numeric,
+                apparent_temperature_morning_temp numeric,
+                pressure_hpa numeric,
+                humidity_pct numeric,
+                dew_point_temp numeric,
+                wind_speed_m_s numeric,
+                wind_direction_deg numeric,
+                wind_gust_speed_m_s numeric,
+                cloud_cover_pct numeric,
+                precipitation_probability numeric,
+                rain_volume_mm numeric,
+                snow_volume_mm numeric,
+                uv_index numeric,
+                weather_condition text,
                 weather_description text,
-                weather_icon text
+                weather_icon_code text
             )
             server {} options (
                 object 'daily_forecast'
@@ -2097,14 +2188,14 @@ impl Guest for OpenWeatherFdwImpl {
             // weather_alerts table (0-N rows from /onecall → alerts[])
             format!(
                 r#"create foreign table if not exists weather_alerts (
-                lat numeric,
-                lon numeric,
-                sender_name text,
-                event text,
-                start bigint,
-                "end" bigint,
-                description text,
-                tags text
+                latitude numeric,
+                longitude numeric,
+                alert_sender_name text,
+                alert_event_type text,
+                alert_start_time timestamp with time zone,
+                alert_end_time timestamp with time zone,
+                alert_description text,
+                alert_tags text
             )
             server {} options (
                 object 'weather_alerts'
@@ -2114,21 +2205,21 @@ impl Guest for OpenWeatherFdwImpl {
             // historical_weather table (1 row from /onecall/timemachine → data[0])
             format!(
                 r#"create foreign table if not exists historical_weather (
-                lat numeric,
-                lon numeric,
-                dt bigint,
-                temp numeric,
-                feels_like numeric,
-                pressure bigint,
-                humidity bigint,
-                dew_point numeric,
-                clouds bigint,
-                visibility bigint,
-                wind_speed numeric,
-                wind_deg bigint,
-                weather_main text,
+                latitude numeric,
+                longitude numeric,
+                observation_time timestamp with time zone,
+                temperature_temp numeric,
+                apparent_temperature_temp numeric,
+                pressure_hpa numeric,
+                humidity_pct numeric,
+                dew_point_temp numeric,
+                cloud_cover_pct numeric,
+                visibility_m numeric,
+                wind_speed_m_s numeric,
+                wind_direction_deg numeric,
+                weather_condition text,
                 weather_description text,
-                weather_icon text
+                weather_icon_code text
             )
             server {} options (
                 object 'historical_weather'
@@ -2138,23 +2229,23 @@ impl Guest for OpenWeatherFdwImpl {
             // daily_summary table (1 row from /onecall/day_summary → daily aggregations)
             format!(
                 r#"create foreign table if not exists daily_summary (
-                lat numeric,
-                lon numeric,
-                tz text,
-                date text,
-                units text,
-                temp_min numeric,
-                temp_max numeric,
-                temp_morning numeric,
-                temp_afternoon numeric,
-                temp_evening numeric,
-                temp_night numeric,
-                cloud_cover_afternoon numeric,
-                humidity_afternoon numeric,
-                pressure_afternoon numeric,
-                precipitation_total numeric,
-                wind_max_speed numeric,
-                wind_max_direction numeric
+                latitude numeric,
+                longitude numeric,
+                timezone_offset text,
+                summary_date text,
+                unit_system text,
+                temperature_min_temp numeric,
+                temperature_max_temp numeric,
+                temperature_morning_temp numeric,
+                temperature_afternoon_temp numeric,
+                temperature_evening_temp numeric,
+                temperature_night_temp numeric,
+                cloud_cover_afternoon_pct numeric,
+                humidity_afternoon_pct numeric,
+                pressure_afternoon_hpa numeric,
+                precipitation_total_mm numeric,
+                wind_max_speed_m_s numeric,
+                wind_max_direction_deg numeric
             )
             server {} options (
                 object 'daily_summary'
@@ -2164,11 +2255,11 @@ impl Guest for OpenWeatherFdwImpl {
             // weather_overview table (1 row from /onecall/overview → AI weather summary)
             format!(
                 r#"create foreign table if not exists weather_overview (
-                lat numeric,
-                lon numeric,
-                tz text,
-                date text,
-                units text,
+                latitude numeric,
+                longitude numeric,
+                timezone_offset text,
+                overview_date text,
+                unit_system text,
                 weather_overview text
             )
             server {} options (

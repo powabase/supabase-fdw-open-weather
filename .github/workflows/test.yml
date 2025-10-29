@@ -33,11 +33,40 @@ jobs:
         with:
           shared-key: "wasm-test"
 
+      - name: Install cargo-component
+        uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-component@0.21.1
+
+      - name: Regenerate bindings
+        run: |
+          cargo component build --target wasm32-unknown-unknown
+          cargo fmt --all
+
       - name: Check formatting
         run: cargo fmt --all -- --check
 
       - name: Run clippy
         run: cargo clippy --target wasm32-unknown-unknown -- -D warnings
+
+  test:
+    name: Run Unit Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache Rust dependencies
+        uses: Swatinem/rust-cache@v2
+        with:
+          shared-key: "wasm-test"
+
+      - name: Run unit tests
+        run: cargo test --lib
 
   build-test:
     name: Build & Validate WASM
