@@ -4,367 +4,146 @@ This file provides guidance to Claude Code when working with the OpenWeather WAS
 
 ## Project Overview
 
-**open-weather-fdw** is a WebAssembly (WASM) Foreign Data Wrapper for PostgreSQL that enables querying the OpenWeather One Call API 3.0 (https://openweathermap.org/api/one-call-3) as if it were a native PostgreSQL table.
+**open-weather-fdw** is a WebAssembly (WASM) Foreign Data Wrapper for PostgreSQL that enables querying the OpenWeather One Call API 3.0 as native PostgreSQL tables.
 
-This wrapper follows the WASM FDW architecture required for hosted Supabase instances and can be used with any Supabase project.
+This wrapper follows the WASM FDW architecture required for hosted Supabase instances.
 
 ## Project Status
 
-**✅ v0.3.2 - Production Ready**
+**✅ v0.3.3 - Production Ready**
 
-- **Current Version:** v0.3.2 (100% database schema standards compliance + parameter transformation + Vault support)
-- **Repository Initialized:** October 24, 2025
-- **Standards Refactoring:** October 29, 2025 (v0.3.0)
-- **Parameter Transformation:** October 29, 2025 (v0.3.1)
-- **Vault Support:** October 29, 2025 (v0.3.2)
+- **Current Version:** v0.3.3 (improved error messages + bug fixes)
 - **Endpoints:** 8 of 8 implemented (100% complete)
-- **Binary Size:** 147 KB (under 150 KB target)
+- **Binary Size:** 148 KB (under 150 KB target)
 - **Standards Compliance:** 100%
-- **Reference Implementation:** [supabase-fdw-energy-charts](https://github.com/powabase/supabase-fdw-energy-charts)
 
 ## Technology Stack
 
 - **Language:** Rust 1.90.0+
-- **Target:** wasm32-unknown-unknown (WebAssembly - NO wasip1!)
+- **Target:** wasm32-unknown-unknown (WebAssembly)
 - **Framework:** Supabase Wrappers v2 API
 - **Build Tool:** cargo-component 0.21.1
 - **API:** OpenWeather One Call API 3.0
-- **Deployment:** GitHub releases with WASM binaries
 
-## Implemented Endpoints (v0.3.0)
+## Implemented Endpoints
 
-All 8 endpoints from OpenWeather One Call API 3.0 are implemented with full standards compliance:
+| Endpoint | Parameters | Rows | Columns |
+|----------|------------|------|---------|
+| current_weather | lat, lon, units?, lang? | 1 | 18 |
+| minutely_forecast | lat, lon, units?, lang? | 60 | 4 |
+| hourly_forecast | lat, lon, units?, lang? | 48 | 19 |
+| daily_forecast | lat, lon, units?, lang? | 8 | 32 |
+| weather_alerts | lat, lon, units?, lang? | 0-N | 8 |
+| historical_weather | lat, lon, observation_time, units?, lang? | 1 | 15 |
+| daily_summary | lat, lon, summary_date, tz_offset?, units?, lang? | 1 | 17 |
+| weather_overview | lat, lon, overview_date?, units?, lang? | 1 | 6 |
 
-| Endpoint | API Path | Parameters | Rows | Columns | Status |
-|----------|----------|------------|------|---------|--------|
-| **current_weather** | /onecall | latitude, longitude, units?, lang? | 1 | 18 | ✅ v0.3.0 |
-| **minutely_forecast** | /onecall | latitude, longitude, units?, lang? | 60 | 4 | ✅ v0.3.0 |
-| **hourly_forecast** | /onecall | latitude, longitude, units?, lang? | 48 | 19 | ✅ v0.3.0 |
-| **daily_forecast** | /onecall | latitude, longitude, units?, lang? | 8 | 32 | ✅ v0.3.0 |
-| **weather_alerts** | /onecall | latitude, longitude, units?, lang? | 0-N | 8 | ✅ v0.3.0 |
-| **historical_weather** | /onecall/timemachine | latitude, longitude, observation_time, units?, lang? | 1 | 15 | ✅ v0.3.1 |
-| **daily_summary** | /onecall/day_summary | latitude, longitude, summary_date, timezone_offset?, units?, lang? | 1 | 17 | ✅ v0.3.1 |
-| **weather_overview** | /onecall/overview | latitude, longitude, overview_date?, units?, lang? | 1 | 6 | ✅ v0.3.1 |
-
-**Total:** 101 columns across 8 foreign tables (all standards-compliant)
-
-## API Reference
-
-**OpenWeather Documentation:**
-- One Call API 3.0: https://openweathermap.org/api/one-call-3
-- API Key: Required (free tier: 1,000 calls/day)
-- Base URL: https://api.openweathermap.org/data/3.0
-- Complete parameter schemas and validation rules are documented in this repository
+**Total:** 101 columns across 8 foreign tables
 
 ## Quick Reference
 
 ### Build Commands
 
 ```bash
-# Development build
-cargo component build --target wasm32-unknown-unknown
-
-# Production build (optimized for size)
-# ⚠️ CRITICAL: Must use wasm32-unknown-unknown (NOT wasm32-wasip1)
+# Production build (CRITICAL: must use wasm32-unknown-unknown, NOT wasip1)
 cargo component build --release --target wasm32-unknown-unknown
 
-# Verify output
-ls -lh target/wasm32-unknown-unknown/release/*.wasm
-# Target: < 150 KB
+# Verify binary
+ls -lh target/wasm32-unknown-unknown/release/*.wasm  # Should be < 150 KB
+wasm-tools component wit target/wasm32-unknown-unknown/release/open_weather_fdw.wasm | grep wasi:cli  # Should be empty
 
-# Calculate checksum for deployment
+# Calculate checksum
 shasum -a 256 target/wasm32-unknown-unknown/release/open_weather_fdw.wasm
 ```
 
 ### Local Testing
 
 ```bash
-# Start local Supabase (in your Supabase project directory)
-supabase start
+# Serve WASM via HTTP (for Docker compatibility)
+cd target/wasm32-unknown-unknown/release && python3 -m http.server 8000 &
 
-# Serve WASM via HTTP (recommended for testing)
-cd target/wasm32-unknown-unknown/release
-python3 -m http.server 8000 &
-
-# Test via SQL (use host.docker.internal for Docker containers)
+# Connect to local Supabase
 psql postgresql://postgres:postgres@127.0.0.1:54322/postgres
 ```
 
-**Important Docker Networking:**
-- ❌ `localhost:8000` won't work (container's localhost ≠ host machine)
-- ❌ `file:///path/to/file.wasm` gives misleading errors
-- ✅ `http://host.docker.internal:8000/open_weather_fdw.wasm` works on Docker Desktop
+**Docker Networking:**
+- ✅ Use `http://host.docker.internal:8000/open_weather_fdw.wasm`
+- ❌ Don't use `localhost:8000` or `file://` paths
 
-## Key Architecture Decisions
+## Critical Implementation Patterns
 
-### Why WASM FDW?
+### 1. Build Target (Most Common Error!)
 
-Hosted Supabase instances **cannot install native PostgreSQL extensions**. WASM FDW is the only way to create custom foreign data wrappers. The WASM binary is:
+**✅ ALWAYS:** `--target wasm32-unknown-unknown`
+**❌ NEVER:** `--target wasm32-wasip1` (adds WASI CLI interfaces that Supabase doesn't support)
 
-1. Built locally or in CI/CD
-2. Published to GitHub releases
-3. Referenced by URL in Supabase SQL
-4. Downloaded and cached on first query execution
+### 2. JSON Parsing Safety
 
-### Critical Implementation Patterns (from energy-charts experience)
-
-#### 1. Build Target (Most Common Error!)
-
-**✅ ALWAYS use wasm32-unknown-unknown:**
-```bash
-cargo component build --release --target wasm32-unknown-unknown
-```
-
-**❌ NEVER use wasm32-wasip1:**
-- Adds WASI CLI interfaces (stdin/stdout/env)
-- Supabase doesn't provide these interfaces
-- Causes: `component imports instance 'wasi:cli/environment@0.2.0'`
-
-**Verify:**
-```bash
-wasm-tools component wit target/wasm32-unknown-unknown/release/open_weather_fdw.wasm | grep wasi:cli
-# Expected: (no output - zero WASI CLI imports)
-```
-
-#### 2. Use .get() Instead of [] (Prevents Panics!)
-
-**✅ Safe:**
+**✅ Use `.get()` for safe access:**
 ```rust
-let value = match json_obj.get("field") {
-    Some(v) => v,
-    None => return Ok(None),
-};
+let value = json_obj.get("field").ok_or("missing field")?;
 ```
 
-**❌ Panics if key missing:**
+**❌ Never use `[]`** - will panic if key is missing
+
+### 3. Optional Fields
+
+Some API responses have optional fields (e.g., `visibility` in historical weather). Use `.unwrap_or()`:
 ```rust
-let value = json_obj["field"];  // Don't do this!
+let visibility = obj.get("visibility").and_then(|v| v.as_i64()).unwrap_or(10000);
 ```
 
-#### 3. API Parameter Extraction
+### 4. Date/Time Parameters
 
-OpenWeather requires specific parameters for each endpoint. Extract from WHERE clause:
+**Important:** `historical_weather.observation_time` requires **literal timestamps** in WHERE clauses:
+- ✅ Works: `WHERE observation_time = '2024-10-23 00:00:00+00'`
+- ❌ Doesn't work: `WHERE observation_time = NOW() - INTERVAL '7 days'`
 
-```rust
-// Example: Extract latitude/longitude from WHERE clause
-let quals = ctx.get_quals();
-let latitude = extract_numeric_qual(&quals, "latitude")?;
-let longitude = extract_numeric_qual(&quals, "longitude")?;
+This is a WASM FDW architecture limitation - expressions aren't evaluated before parameter extraction.
 
-// Build URL with parameters
-let url = format!(
-    "{}/onecall?lat={}&lon={}&appid={}",
-    base_url, latitude, longitude, api_key
-);
-```
+## Top 3 Pitfalls
 
-#### 4. Parameter Transformation (v0.3.1)
-
-The FDW abstracts API-specific parameters using semantic column names:
-
-**Pattern:** User queries with SQL-standard columns → FDW transforms to API parameters
-
-**Examples:**
-
-| Endpoint | User Column | API Parameter | Transformation |
-|----------|-------------|---------------|----------------|
-| historical_weather | `observation_time` (TIMESTAMPTZ) | `dt` (Unix seconds) | µs ÷ 1,000,000 |
-| daily_summary | `summary_date` (TEXT) | `date` (TEXT) | Pass-through |
-| weather_overview | `overview_date` (TEXT) | `date` (TEXT) | Pass-through |
-
-**Benefits:**
-- Native PostgreSQL temporal operations (intervals, date arithmetic)
-- Consistent with database schema design standards
-- Users don't need API knowledge
-- Enables cross-source joins with consistent column names
-
-**Implementation Pattern:**
-```rust
-// Extract semantic column from WHERE clause
-let observation_time = extract_qual_timestamptz(&quals, "observation_time")?;
-
-// Transform to API parameter (Unix timestamp)
-let dt = observation_time / 1_000_000;  // µs → seconds
-
-// Build API URL with transformed parameter
-let url = format!("{}/onecall/timemachine?dt={}&...", base_url, dt);
-```
-
-See [Parameter Transformation Guide](docs/guides/PARAMETER_TRANSFORMATION.md) for details.
-
-## Top 3 Pitfalls to Avoid (from energy-charts)
-
-### 1. Wrong Build Target (wasip1)
+### 1. Wrong Build Target
 - **Symptom:** `component imports instance wasi:cli/environment@0.2.0`
-- **Cause:** Built with `wasm32-wasip1` instead of `wasm32-unknown-unknown`
 - **Solution:** Always use `wasm32-unknown-unknown` target
-- **Prevention:** Verify with `wasm-tools component wit` before releasing
 
 ### 2. Using [] Instead of .get()
-- **Symptom:** Panic at runtime, wrapper crashes
-- **Cause:** Accessing JSON with `[]` when key doesn't exist
-- **Solution:** Always use `.get()` for safe access
-- **Prevention:** Code review for any `[]` usage on dynamic data
+- **Symptom:** Panic at runtime
+- **Solution:** Always use `.get()` for JSON access
 
 ### 3. Local Testing with file:// URLs
 - **Symptom:** Misleading "invalid WebAssembly component" error
-- **Cause:** Supabase Docker can't access host filesystem
 - **Solution:** Use HTTP server with `host.docker.internal`
-- **Prevention:** Always test with HTTP URLs locally
 
-## Implementation Guidance
+## Key JSON Parsing Patterns
 
-### Phase 1: Start with One Endpoint
+- Weather data: Extract from **array** → `weather[0]`
+- Daily temp/feels_like: **Nested objects** → `{day, min, max, ...}`
+- Rain/snow: **Conditional nested objects** → `{1h: value}`
+- Historical: Uses **data[0]** array, not flat response
+- Optional fields: Use `.unwrap_or()` with sensible defaults
 
-Recommend implementing **current_and_forecasts** first:
-- Most commonly used endpoint
-- Clear parameter schema (latitude, longitude required)
-- Well-documented response format
-- Can test immediately
+## API Reference
 
-### Phase 2: Response Schema Design
-
-OpenWeather returns nested JSON. Need to flatten to SQL rows:
-
-**Options:**
-1. **Single table with all fields** - Simple but potentially wide
-2. **Separate tables per data type** - current, hourly, daily as separate foreign tables
-3. **Flattened arrays** - Like energy-charts does with time series
-
-**Recommendation:** Start simple (option 1), refactor if needed.
-
-### Phase 3: Parameter Handling
-
-Map WHERE clause to API parameters:
-- Required: latitude, longitude (always)
-- Optional: units (standard/metric/imperial), lang, exclude
-- Endpoint-specific: observation_time (historical), summary_date/overview_date (daily summaries), etc.
-
-### Phase 4: Testing Strategy
-
-1. Build stub (current status) ✅
-2. Implement one endpoint (current_and_forecasts)
-3. Test locally with real API key
-4. Add error handling
-5. Optimize response parsing
-6. Document schema
-7. Repeat for other endpoints
-
-## Documentation Map
-
-### Initialization (Complete)
-- **[README.md](README.md)** - Project overview
-- **[QUICKSTART.md](QUICKSTART.md)** - Setup guide template
-- **This File (CLAUDE.md)** - AI assistant instructions
-
-### To Be Created During Implementation
-- **Deployment Guide** - docs/guides/DEPLOYMENT_GUIDE.md
-- **Troubleshooting Guide** - docs/guides/TROUBLESHOOTING.md
-- **SQL Examples** - docs/reference/SQL_EXAMPLES.md
-- **API Overview** - docs/reference/API_OVERVIEW.md
-- **Endpoint Docs** - docs/endpoints/*.md (one per endpoint)
-
-## Example SQL Setup (Template)
-
-```sql
--- Create server with GitHub release URL
-CREATE SERVER openweather_server
-  FOREIGN DATA WRAPPER wasm_wrapper
-  OPTIONS (
-    fdw_package_url 'https://github.com/powabase/supabase-fdw-open-weather/releases/download/v0.1.0/open_weather_fdw.wasm',
-    fdw_package_name 'powabase:supabase-fdw-open-weather',
-    fdw_package_version '0.1.0',
-    fdw_package_checksum 'TBD_AFTER_BUILD',
-    api_url 'https://api.openweathermap.org/data/3.0',
-    api_key 'your_openweather_api_key_here'
-  );
-
--- Create schema
-CREATE SCHEMA IF NOT EXISTS fdw_open_weather;
-
--- Create foreign table (schema TBD during implementation)
-CREATE FOREIGN TABLE fdw_open_weather.current_weather (
-  -- TODO: Define schema based on OpenWeather response
-  latitude numeric,
-  longitude numeric
-  -- ... more columns
-)
-SERVER openweather_server
-OPTIONS (object 'current_and_forecasts');
-
--- Test query
-SELECT * FROM fdw_open_weather.current_weather
-WHERE latitude = 52.52 AND longitude = 13.405
-LIMIT 5;
-```
+- **Documentation:** https://openweathermap.org/api/one-call-3
+- **Base URL:** https://api.openweathermap.org/data/3.0
+- **API Key:** Required (free tier: 1,000 calls/day)
+- **Supabase WASM FDW:** https://fdw.dev
 
 ## Reference Implementation
 
-**Energy Charts FDW:**
-- Repository: [supabase-fdw-energy-charts](https://github.com/powabase/supabase-fdw-energy-charts)
-- Status: Production-ready (v0.5.0)
-- Use as reference for:
-  - Project structure
-  - Build configuration
-  - Error handling patterns
-  - Documentation style
-  - GitHub workflows
+**Energy Charts FDW:** https://github.com/powabase/supabase-fdw-energy-charts
+Use as reference for project structure, error handling, and build configuration.
 
-## When Working on This Project
+## Release Checklist (v0.3.3)
 
-### Adding Endpoint Implementation
-
-1. Update `EndpointData` enum in `src/lib.rs` with data structure
-2. Implement response parsing in `begin_scan()`
-3. Implement row iteration in `iter_scan()`
-4. Test locally with HTTP server
-5. Document in `docs/endpoints/[name].md`
-6. Update README.md features
-7. Update QUICKSTART.md with schema
-
-### Debugging Issues
-
-1. **Check build target first** (wasm32-unknown-unknown?)
-2. **Verify WASI imports** (should be zero)
-3. **Test with HTTP URL** (not file://)
-4. **Check JSON parsing** (use .get(), not [])
-5. **Verify API key** (check OpenWeather dashboard)
-6. **Review logs** in Supabase dashboard
-
-### v0.3.2 Release Checklist
-
-- [x] All 8 endpoints implemented and standards-compliant
-- [x] Vault support implemented with dual-mode secret retrieval
-- [x] Version updated in Cargo.toml, wit/world.wit, CLAUDE.md, README.md
-- [x] Deprecation warnings added for plain text api_key
-- [x] Documentation updated with Vault security section in README.md
-- [ ] Built with `--release --target wasm32-unknown-unknown`
-- [ ] Verified zero WASI CLI imports
-- [ ] Binary size < 150 KB
-- [ ] Tested locally with Vault mode (api_key_id)
-- [ ] Tested locally with plain text mode (api_key) - verify deprecation warning
-- [ ] Tested error handling (neither option provided, invalid vault ID)
-- [ ] SHA256 checksum calculated
-- [ ] GitHub release created with notes
-
-## Support
-
-- **Issues:** GitHub Issues
-- **OpenWeather API:** https://openweathermap.org/api/one-call-3
-- **Supabase WASM FDW:** https://fdw.dev
-- **Reference:** Energy Charts FDW source code
-
-## Critical Implementation Notes
-
-**Key JSON Parsing Patterns:**
-- Weather data is returned as **array** - must extract `weather[0]`
-- Daily temp/feels_like are **nested objects** `{day, min, max, ...}`
-- Rain/snow are **conditional nested objects** `{1h: value}`
-- Historical uses **data[0]** array, not flat response
-
-**Best Practices from Energy Charts:**
-- ALWAYS use `.get()` instead of `[]` for JSON access (prevents panics)
-- Build with `--target wasm32-unknown-unknown` (NOT wasip1!)
-- Test with HTTP server (not file://) for Docker compatibility
-- Handle NULL values gracefully
-- Validate parameters before API call
+- [x] Improved error messages for date/time parameters
+- [x] Fixed missing visibility field in historical weather
+- [x] Updated all documentation
+- [x] Version bumped in Cargo.toml, wit/world.wit, CLAUDE.md
+- [x] Built with correct target (wasm32-unknown-unknown)
+- [x] Verified zero WASI CLI imports
+- [x] Binary size: 148 KB (< 150 KB)
+- [x] Tested with literal timestamps
+- [ ] SHA256 checksum: `4f2486b6e7cdddd8d23900f3868f12f7b356597d5152effb33f93f6b60266faf`
+- [ ] GitHub release created

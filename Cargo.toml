@@ -1,6 +1,6 @@
 [package]
 name = "open-weather-fdw"
-version = "0.3.2"
+version = "0.3.3"
 edition = "2021"
 description = "WASM Foreign Data Wrapper for OpenWeather One Call API 3.0"
 repository = "https://github.com/powabase/supabase-fdw-open-weather"
