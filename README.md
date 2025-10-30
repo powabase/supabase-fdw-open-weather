@@ -89,10 +89,10 @@ WHERE latitude = 52.52 AND longitude = 13.405;
 SELECT * FROM fdw_open_weather.weather_alerts
 WHERE latitude = 52.52 AND longitude = 13.405;
 
--- Historical weather (with native TIMESTAMPTZ)
+-- Historical weather (requires literal timestamp - functions not supported)
 SELECT * FROM fdw_open_weather.historical_weather
 WHERE latitude = 52.52 AND longitude = 13.405
-  AND observation_time = '2024-01-01 00:00:00+00';
+  AND observation_time = '2024-10-23 00:00:00+00';
 
 -- Daily aggregated statistics
 SELECT * FROM fdw_open_weather.daily_summary

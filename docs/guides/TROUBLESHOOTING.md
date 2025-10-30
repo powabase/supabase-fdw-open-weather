@@ -87,8 +87,8 @@ ERROR: column "date" does not exist
 
 **Solution:** Use v0.3.1 semantic parameter names
 ```sql
--- historical_weather: Use observation_time (not dt)
-WHERE observation_time = '2024-01-01 00:00:00+00'
+-- historical_weather: Use observation_time (not dt, requires literal timestamp)
+WHERE observation_time = '2024-10-23 00:00:00+00'
 
 -- daily_summary: Use summary_date (not date)
 WHERE summary_date = '2024-01-15'

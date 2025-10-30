@@ -5780,7 +5780,7 @@ macro_rules! __export_open_weather_fdw_impl {
 pub(crate) use __export_open_weather_fdw_impl as export;
 #[cfg(target_arch = "wasm32")]
 #[unsafe(
-    link_section = "component-type:wit-bindgen:0.41.0:powabase:supabase-fdw-open-weather@0.3.0:open-weather-fdw:encoded world"
+    link_section = "component-type:wit-bindgen:0.41.0:powabase:supabase-fdw-open-weather@0.3.2:open-weather-fdw:encoded world"
 )]
 #[doc(hidden)]
 #[allow(clippy::octal_escapes)]
@@ -5863,7 +5863,7 @@ ext\x03\0\x06\x02\x03\x02\x01\x08\x04\0\x09fdw-error\x03\0\x08\x02\x03\x02\x01\x
 \x01@\x02\x03ctx\x0d\x05rowid\x01\0\x0b\x04\0\x06delete\x01\x15\x04\0\x0aend-mod\
 ify\x01\x0e\x01ps\x01j\x01\x16\x01\x09\x01@\x02\x03ctx\x0d\x04stmt\x05\0\x17\x04\
 \0\x15import-foreign-schema\x01\x18\x04\0\x20supabase:wrappers/routines@0.2.0\x05\
-\x0a\x04\09powabase:supabase-fdw-open-weather/open-weather-fdw@0.3.0\x04\0\x0b\x16\
+\x0a\x04\09powabase:supabase-fdw-open-weather/open-weather-fdw@0.3.2\x04\0\x0b\x16\
 \x01\0\x10open-weather-fdw\x03\0\0\0G\x09producers\x01\x0cprocessed-by\x02\x0dwi\
 t-component\x070.227.1\x10wit-bindgen-rust\x060.41.0";
 #[inline(never)]

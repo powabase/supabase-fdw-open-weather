@@ -451,7 +451,11 @@ impl OpenWeatherFdw {
                 )
             }
             EndpointType::HistoricalWeather => {
-                let dt = self.dt.ok_or("observation_time parameter required for historical_weather. Example: WHERE latitude = 52.52 AND longitude = 13.405 AND observation_time = '2024-01-01 00:00:00+00'")?;
+                let dt = self.dt.ok_or(
+                    "WHERE clause must include 'observation_time' for historical_weather.\n\
+                     Use literal timestamp format: 'YYYY-MM-DD HH:MM:SS+00'\n\
+                     Example: WHERE observation_time = '2024-10-28 00:00:00+00'"
+                )?;
                 format!(
                     "{}{}?lat={}&lon={}&dt={}&appid={}&units={}&lang={}",
                     self.base_url,
@@ -465,7 +469,11 @@ impl OpenWeatherFdw {
                 )
             }
             EndpointType::DailySummary => {
-                let date = self.date.as_ref().ok_or("summary_date parameter required for daily_summary (YYYY-MM-DD format). Example: WHERE latitude = 52.52 AND longitude = 13.405 AND summary_date = '2024-01-15'")?;
+                let date = self.date.as_ref().ok_or(
+                    "WHERE clause must include 'summary_date' for daily_summary.\n\
+                     Use literal date format: 'YYYY-MM-DD'\n\
+                     Example: WHERE summary_date = '2024-10-15'"
+                )?;
                 let mut url = format!(
                     "{}{}?lat={}&lon={}&date={}&appid={}&units={}&lang={}",
                     self.base_url,
@@ -1204,10 +1212,11 @@ impl OpenWeatherFdw {
             .get("clouds")
             .and_then(|v| v.as_i64())
             .ok_or("missing clouds")?;
+        // visibility is optional in historical data (not always available)
         let visibility = historical
             .get("visibility")
             .and_then(|v| v.as_i64())
-            .ok_or("missing visibility")?;
+            .unwrap_or(10000); // Default to 10km if not provided
         let wind_speed = historical
             .get("wind_speed")
             .and_then(|v| v.as_f64())
@@ -1998,7 +2007,15 @@ impl Guest for OpenWeatherFdwImpl {
             EndpointType::HistoricalWeather => {
                 // Extract observation_time and convert to Unix seconds for API
                 let observation_time = OpenWeatherFdw::extract_qual_timestamptz(&quals, "observation_time")
-                    .ok_or("WHERE clause must include 'observation_time' for historical_weather. Example: WHERE latitude = 52.52 AND longitude = 13.405 AND observation_time = '2024-01-01 00:00:00+00'")?;
+                    .ok_or(
+                        "WHERE clause must include 'observation_time' for historical_weather.\n\
+                         Use a literal timestamp value in the format 'YYYY-MM-DD HH:MM:SS+00'.\n\
+                         \n\
+                         Example: WHERE observation_time = '2024-10-28 00:00:00+00'\n\
+                         \n\
+                         Note: Computed expressions (NOW(), INTERVAL, etc.) are not supported in WHERE clauses.\n\
+                         Calculate timestamps in your application before querying."
+                    )?;
                 instance.dt = Some(observation_time / 1_000_000); // Convert microseconds → seconds for API
             }
             EndpointType::DailySummary => {

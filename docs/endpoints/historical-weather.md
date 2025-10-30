@@ -33,11 +33,11 @@ OPTIONS (object 'historical_weather');
 ## Example Query
 
 ```sql
--- Get historical weather (v0.3.1 with native TIMESTAMPTZ)
+-- Get historical weather (requires literal timestamp)
 SELECT observation_time, temp_celsius, weather_description
 FROM fdw_open_weather.historical_weather
 WHERE latitude = 52.52 AND longitude = 13.405
-  AND observation_time = '2024-01-01 00:00:00+00';
+  AND observation_time = '2024-10-23 00:00:00+00';
 ```
 
 ## More Information
